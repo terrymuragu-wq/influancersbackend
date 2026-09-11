@@ -132,12 +132,12 @@ const seedCategories = [
     ['who.ismishy', ''],
     ['I.t.s.f.a.b.i.a.n_', ''],
     ['Mr_mombasa', ''],
-    ['Lavoofoxy', ''],
     ['anyango__', ''],
     ['darius.mboya', ''],
     ['O.yugi._', ''],
     ['j__zilster', ''],
     ['I_am_kamasho', ''],
+    ['Lavoofoxy', ''],
   ]},
 ];
 
