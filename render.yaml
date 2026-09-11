@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: mella-transnzoia-backend
+    name: influancersbackend
     env: node
     plan: free
     buildCommand: |
@@ -13,14 +13,10 @@ services:
         value: production
       - key: PORT
         value: 10000
-      - key: JWT_SECRET
-        generateValue: true
-      - key: ADMIN_PASSWORD
-        value: 11makus72
       - key: VOTE_PRICE
-        value: 10
-      - key: COUNTDOWN_DAYS
         value: 20
+      - key: COUNTDOWN_DAYS
+        value: 28
       - key: MPESA_MODE
         value: live
       - key: KCB_ENV
@@ -31,21 +27,24 @@ services:
         value: https://api.buni.kcbgroup.com/token
       - key: KCB_STK_ENDPOINT
         value: https://api.buni.kcbgroup.com/mm/api/request/1.0.0/stkpush
-      - key: KCB_CONSUMER_KEY
-        value: ycnTw9s_NkRX0tZjsyAVgmxxe_Ya
-      - key: KCB_CONSUMER_SECRET
-        value: yPMZuSFfrM6SWuByHYaPth6nprga
+      - key: KCB_QUERY_ENDPOINT
+        value: https://api.buni.kcbgroup.com/mm/api/request/1.0.0/stkpushquery
       - key: KCB_CALLBACK_URL
-        value: https://mellatransnzoia.onrender.com/callback
-      - key: KCB_SHORTCODE
-        value: "8112320"
-      - key: KCB_TILL
-        value: "8112320"
+        value: https://influancersbackend.onrender.com/callback
       - key: CORS_ORIGINS
         value: "*"
-      - key: DB_PATH
-        value: /var/data/mella.db
-    disk:
-      name: mella-data
-      mountPath: /var/data
-      sizeGB: 1
+      # ---- Secrets: set these manually in the Render dashboard (never in git) ----
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: KCB_CONSUMER_KEY
+        sync: false
+      - key: KCB_CONSUMER_SECRET
+        sync: false
+      - key: KCB_SHORTCODE
+        sync: false
+      - key: KCB_TILL
+        sync: false

@@ -10,7 +10,8 @@ const KCB_TOKEN_ENDPOINT = process.env.KCB_TOKEN_ENDPOINT || `${KCB_BASE_URL.rep
 const KCB_CONSUMER_KEY = process.env.KCB_CONSUMER_KEY || process.env.MPESA_CONSUMER_KEY || '';
 const KCB_CONSUMER_SECRET = process.env.KCB_CONSUMER_SECRET || process.env.MPESA_CONSUMER_SECRET || '';
 const KCB_API_KEY = process.env.KCB_API_KEY || '';
-const KCB_CALLBACK_URL = process.env.KCB_CALLBACK_URL || process.env.MPESA_CALLBACK_URL || 'https://mellatransnzoia.onrender.com/callback';
+// Callback URL comes ONLY from the environment — never hardcode backend URLs/secrets.
+const KCB_CALLBACK_URL = process.env.KCB_CALLBACK_URL || process.env.MPESA_CALLBACK_URL || '';
 const KCB_SHORTCODE = process.env.KCB_SHORTCODE || process.env.MPESA_SHORTCODE || '';
 const KCB_TILL = process.env.KCB_TILL || KCB_SHORTCODE;
 const KCB_STK_ENDPOINT = process.env.KCB_STK_ENDPOINT || `${KCB_BASE_URL.replace(/\/$/, '')}/mm/api/request/1.0.0/stkpush`;

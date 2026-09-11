@@ -1,4 +1,4 @@
-// server.js — TRANS-NZOIA Mella Awards API
+// server.js — Creatives Awards 2026 API
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -13,11 +13,19 @@ const { v4: uuid } = require('uuid');
 const db = require('./db');
 const { stkPush, simulateConfirm, queryStkStatus, MODE: MPESA_MODE } = require('./mpesa');
 
+// Neon (Postgres) backup layer: exports a full snapshot every 3 minutes and
+// automatically restores from the latest backup if local data is ever lost.
+require('./neon').init(db);
+
 const app = express();
 const PORT = process.env.PORT || 10000;
-const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '11makus72';
-const VOTE_PRICE = parseInt(process.env.VOTE_PRICE || '10', 10);
+// Secrets come ONLY from the environment — nothing sensitive is hardcoded.
+const crypto = require('crypto');
+const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
+if (!process.env.JWT_SECRET) console.warn('[security] JWT_SECRET is not set — using an ephemeral random secret. Set JWT_SECRET in your environment for persistent sessions.');
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
+if (!ADMIN_PASSWORD) console.warn('[security] ADMIN_PASSWORD is not set — admin login is DISABLED until you set it in your environment.');
+const VOTE_PRICE = parseInt(process.env.VOTE_PRICE || '20', 10);
 
 // ---- Middleware ----
 app.set('trust proxy', 1);
@@ -69,7 +77,7 @@ function isValidKenyanPhone(p) {
 
 // ---- Health ----
 app.get('/api/health', (req, res) => {
-  res.json({ ok: true, ts: Date.now(), service: 'transnzoia-mella-api' });
+  res.json({ ok: true, ts: Date.now(), service: 'creatives-awards-api' });
 });
 
 // ---- Public: Categories + Nominees + Live Totals ----
@@ -212,7 +220,7 @@ app.post('/api/vote/initiate', async (req, res) => {
   if (!nomineeId || !amount) return res.status(400).json({ error: 'missing_fields' });
 
   const amt = parseInt(amount, 10);
-  // Accept KES 10 up to KES 1000, in multiples of the vote price (KES 10).
+  // Accept KES 20 up to KES 1000, in multiples of the vote price (KES 20).
   const MAX_AMOUNT = 1000;
   if (!Number.isFinite(amt) || amt < VOTE_PRICE || amt % VOTE_PRICE !== 0 || amt > MAX_AMOUNT) {
     return res.status(400).json({ error: 'invalid_amount', hint: `Amount must be a multiple of ${VOTE_PRICE} (min ${VOTE_PRICE}, max ${MAX_AMOUNT})` });
@@ -222,7 +230,7 @@ app.post('/api/vote/initiate', async (req, res) => {
   if (!nominee) return res.status(404).json({ error: 'nominee_not_found' });
 
   // Voting is unrestricted — a voter may vote as many times as they wish,
-  // in any category, from any device. Each KES 10 paid = 1 vote.
+  // in any category, from any device. Each KES 20 paid = 1 vote.
   const p = normalisePhone(phone);
   if (!isValidKenyanPhone(p)) return res.status(400).json({ error: 'invalid_phone' });
 
@@ -420,7 +428,7 @@ app.post('/callback', handleMpesaCallback);
 app.post('/api/admin/login', (req, res) => {
   const { password } = req.body || {};
   if (!password) return res.status(400).json({ error: 'missing_password' });
-  if (password !== ADMIN_PASSWORD) return res.status(401).json({ error: 'invalid_credentials' });
+  if (!ADMIN_PASSWORD || password !== ADMIN_PASSWORD) return res.status(401).json({ error: 'invalid_credentials' });
   const token = sign({ admin: true, iat: Date.now() });
   res.json({ token });
 });
@@ -602,7 +610,7 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`\n🏆  TRANS-NZOIA Mella Awards API listening on :${PORT}`);
+  console.log(`\n🏆  Creatives Awards 2026 API listening on :${PORT}`);
   console.log(`   Mode: ${process.env.NODE_ENV || 'development'}`);
   console.log(`   Admin panel: http://localhost:${PORT}/admin\n`);
 });
