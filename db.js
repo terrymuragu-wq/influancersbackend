@@ -128,7 +128,6 @@ const SEED_VERSION = 'v2-2026-influencers-of-the-year';
 
 const seedCategories = [
   { id: 'influencers-of-the-year', title: 'Influencers of the Year', nominees: [
-    ['Saint_millan', 'Instagram'],
     ['who.ismishy', 'Instagram'],
     ['I.t.s.f.a.b.i.a.n_', 'Instagram'],
     ['Mr_mombasa', 'Instagram'],
