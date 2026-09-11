@@ -123,21 +123,21 @@ try {
   }
 } catch (e) { console.error('[db] device_votes migration error:', e); }
 
-// ---- Seed data (Creatives Awards 2026 — ONE category: Influencers of the Year) ----
-const SEED_VERSION = 'v3-2026-influencers-of-the-year-dedup';
+// ---- Seed data (Creatives Award 2026 — Influencers of the Year) ----
+const SEED_VERSION = 'v1-2026-creatives-award';
 
 const seedCategories = [
   { id: 'influencers-of-the-year', title: 'Influencers of the Year', nominees: [
-    ['Saint_millan', 'Instagram'],
-    ['who.ismishy', 'Instagram'],
-    ['I.t.s.f.a.b.i.a.n_', 'Instagram'],
-    ['Mr_mombasa', 'Instagram'],
-    ['Lavoofoxy', 'Instagram'],
-    ['anyango__', 'Instagram'],
-    ['darius.mboya', 'Instagram'],
-    ['O.yugi._', 'Instagram'],
-    ['___j__zilster___', 'Instagram'],
-    ['I_am_kamasho', 'Instagram'],
+    ['Saint_millan', ''],
+    ['who.ismishy', ''],
+    ['I.t.s.f.a.b.i.a.n_', ''],
+    ['Mr_mombasa', ''],
+    ['Lavoofoxy', ''],
+    ['anyango__', ''],
+    ['darius.mboya', ''],
+    ['O.yugi._', ''],
+    ['j__zilster', ''],
+    ['I_am_kamasho', ''],
   ]},
 ];
 
@@ -150,7 +150,7 @@ const crypto = require('crypto');
 // after the backend loses its SQLite file. Without this, a wipe would rename
 // every nominee and the floor would go orphan.
 function deterministicNomineeId(categoryId, name) {
-  const h = crypto.createHash('sha1').update('mella-nominee|' + categoryId + '|' + name).digest('hex');
+  const h = crypto.createHash('sha1').update('creatives-nominee|' + categoryId + '|' + name).digest('hex');
   // Format the sha1 hex as a UUID-shaped string for backwards compatibility
   // with any previously-generated ids from the current live DB.
   return (
@@ -177,72 +177,43 @@ function seedAll() {
 }
 
 const catCount = db.prepare('SELECT COUNT(*) AS n FROM categories').get().n;
+const wasFreshSeed = catCount === 0;
 const seedRow = db.prepare('SELECT value FROM settings WHERE key = ?').get('seed_version');
 const currentSeed = seedRow ? seedRow.value : null;
 
 if (catCount === 0) {
   seedAll();
   db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run('seed_version', SEED_VERSION);
-  console.log('[db] Seeded Creatives Awards 2026 categories and nominees.');
+  console.log('[db] Seeded Creatives Award 2026 categories and nominees.');
 } else if (currentSeed !== SEED_VERSION) {
   // Existing DB from an older seed — replace category/nominee catalogue but keep votes/transactions history intact.
-  // Foreign keys are disabled for the duration of the swap so historical
-  // transactions (which reference old nominee ids) can never block the re-seed
-  // and crash the server on boot. LEFT JOINs in the API tolerate the old ids.
-  db.pragma('foreign_keys = OFF');
-  try {
-    const wipe = db.transaction(() => {
-      // PRESERVE VOTES across the swap: for every old nominee whose (category,
-      // name) still exists in the new seed, fold its current displayed total
-      // (db votes AND floor) into the persistent floor under the NEW
-      // deterministic id. Nothing is lost — numbers only ever move up.
-      const newIdsByKey = new Map();
-      seedCategories.forEach(cat => cat.nominees.forEach(n => {
-        newIdsByKey.set(cat.id + '|' + n[0], deterministicNomineeId(cat.id, n[0]));
-      }));
-      const oldNoms = db.prepare(`
-        SELECT n.id, n.category_id, n.name, (n.base_votes + n.paid_votes) AS v,
-               COALESCE(vb.base, 0) AS floor
-        FROM nominees n LEFT JOIN vote_baseline vb ON vb.nominee_id = n.id
-      `).all();
-      const upFloor = db.prepare(`
-        INSERT INTO vote_baseline (nominee_id, base, updated_at) VALUES (?, ?, ?)
-        ON CONFLICT(nominee_id) DO UPDATE SET
-          base = MAX(vote_baseline.base, excluded.base),
-          updated_at = excluded.updated_at
-      `);
-      oldNoms.forEach(n => {
-        const newId = newIdsByKey.get(n.category_id + '|' + n.name);
-        if (!newId) return; // removed from the catalogue (e.g. duplicate/typo row) — its votes are dropped with it
-        const carry = Math.max(n.v || 0, n.floor || 0);
-        if (carry > 0) upFloor.run(newId, carry, Date.now());
-      });
-      db.prepare('DELETE FROM nominees').run();
-      db.prepare('DELETE FROM categories').run();
-    });
-    wipe();
-  } finally {
-    db.pragma('foreign_keys = ON');
-  }
+  const wipe = db.transaction(() => {
+    db.prepare('DELETE FROM nominees').run();
+    db.prepare('DELETE FROM categories').run();
+  });
+  wipe();
   seedAll();
-  // Remove floor rows that point at nominees which no longer exist (e.g. the
-  // old 'Saint_millani' duplicate) so they can never resurrect phantom votes.
-  db.prepare('DELETE FROM vote_baseline WHERE nominee_id NOT IN (SELECT id FROM nominees)').run();
   db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run('seed_version', SEED_VERSION);
   console.log('[db] Re-seeded categories/nominees to ' + SEED_VERSION);
 }
 
-// Boot-time hygiene: drop any orphan floor rows (defence against older bugs).
-try {
-  db.prepare('DELETE FROM vote_baseline WHERE nominee_id NOT IN (SELECT id FROM nominees)').run();
-} catch (e) { /* ignore */ }
-
 // Countdown init
 const cdRow = db.prepare('SELECT value FROM settings WHERE key = ?').get('countdown_end');
 if (!cdRow) {
-  const days = parseInt(process.env.COUNTDOWN_DAYS || '28', 10);
+  const days = parseInt(process.env.COUNTDOWN_DAYS || '20', 10);
   const end = Date.now() + days * 24 * 60 * 60 * 1000;
   db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run('countdown_end', String(end));
+}
+
+// ---- Neon PostgreSQL mirror (optional) ----
+// When DATABASE_URL is set, the SQLite store is mirrored to Neon Postgres and
+// automatically restored if the local DB is wiped/re-seeded (e.g. Render cold
+// start). Votes, transactions, users and settings all survive data loss.
+if (process.env.DATABASE_URL) {
+  const neon = require('./neon');
+  neon.init(db, { freshSeed: wasFreshSeed }).catch(e => {
+    console.error('[neon] init error:', e.message);
+  });
 }
 
 module.exports = db;

@@ -10,17 +10,12 @@ const KCB_TOKEN_ENDPOINT = process.env.KCB_TOKEN_ENDPOINT || `${KCB_BASE_URL.rep
 const KCB_CONSUMER_KEY = process.env.KCB_CONSUMER_KEY || process.env.MPESA_CONSUMER_KEY || '';
 const KCB_CONSUMER_SECRET = process.env.KCB_CONSUMER_SECRET || process.env.MPESA_CONSUMER_SECRET || '';
 const KCB_API_KEY = process.env.KCB_API_KEY || '';
-// Callback URL comes ONLY from the environment — never hardcode backend URLs/secrets.
-const KCB_CALLBACK_URL = process.env.KCB_CALLBACK_URL || process.env.MPESA_CALLBACK_URL || '';
+const KCB_CALLBACK_URL = process.env.KCB_CALLBACK_URL || process.env.MPESA_CALLBACK_URL || 'https://mellatransnzoia.onrender.com/callback';
 const KCB_SHORTCODE = process.env.KCB_SHORTCODE || process.env.MPESA_SHORTCODE || '';
 const KCB_TILL = process.env.KCB_TILL || KCB_SHORTCODE;
 const KCB_STK_ENDPOINT = process.env.KCB_STK_ENDPOINT || `${KCB_BASE_URL.replace(/\/$/, '')}/mm/api/request/1.0.0/stkpush`;
 const KCB_QUERY_ENDPOINT = process.env.KCB_QUERY_ENDPOINT || `${KCB_BASE_URL.replace(/\/$/, '')}/mm/api/request/1.0.0/stkpushquery`;
 const MODE = (process.env.MPESA_MODE || (KCB_ENV === 'production' ? 'live' : 'sandbox')).toLowerCase();
-
-// Hard network ceiling for every outbound KCB call — a hung upstream can never
-// wedge the API. AbortSignal.timeout is built into Node 18+.
-const KCB_TIMEOUT_MS = parseInt(process.env.KCB_TIMEOUT_MS || '12000', 10);
 
 // In-memory state for pending simulated transactions (sandbox mode only)
 const pending = new Map();
@@ -53,7 +48,6 @@ async function getAccessToken() {
       'Accept': 'application/json',
     },
     body: body.toString(),
-    signal: AbortSignal.timeout(KCB_TIMEOUT_MS),
   });
 
   if (!resp.ok) {
@@ -141,7 +135,6 @@ async function stkPush({ phone, amount, accountRef, description }) {
       method: 'POST',
       headers,
       body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(KCB_TIMEOUT_MS),
     });
 
     const text = await resp.text();
@@ -212,7 +205,6 @@ async function queryStkStatus(checkoutId) {
       method: 'POST',
       headers,
       body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(KCB_TIMEOUT_MS),
     });
     const text = await resp.text();
     let body;

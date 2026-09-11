@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Creatives Awards — Organiser Console</title>
+<title>Creatives Award 2026 — Organiser Console</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -165,7 +165,7 @@ tbody tr:hover{background:rgba(198,161,91,0.04);}
         <circle cx="20" cy="20" r="14" stroke="#c6a15b" stroke-width="0.7"/>
         <path d="M20 10 L22.5 17 L30 17 L23.8 21.6 L26.2 29 L20 24.4 L13.8 29 L16.2 21.6 L10 17 L17.5 17 Z" fill="#c6a15b"/>
       </svg>
-      <div class="gate-seal-t">Creatives Awards<span>ORGANISER CONSOLE</span></div>
+      <div class="gate-seal-t">Creatives Award<span>ORGANISER CONSOLE</span></div>
     </div>
     <div class="gate-title">Sign in</div>
     <div class="gate-sub">Restricted access. Enter the organiser password to continue.</div>
@@ -185,7 +185,7 @@ tbody tr:hover{background:rgba(198,161,91,0.04);}
         <circle cx="20" cy="20" r="14" stroke="#c6a15b" stroke-width="0.7"/>
         <path d="M20 10 L22.5 17 L30 17 L23.8 21.6 L26.2 29 L20 24.4 L13.8 29 L16.2 21.6 L10 17 L17.5 17 Z" fill="#c6a15b"/>
       </svg>
-      <div class="brand-t">Creatives Awards<span>ORGANISER CONSOLE · 2026</span></div>
+      <div class="brand-t">Creatives Award<span>ORGANISER CONSOLE · 2026</span></div>
     </div>
     <div class="top-actions">
       <div class="live-pill"><span class="live-dot"></span>Live</div>
@@ -320,7 +320,7 @@ tbody tr:hover{background:rgba(198,161,91,0.04);}
         </div>
       </div>
       <div style="margin-top:28px;padding-top:24px;border-top:1px solid var(--line);">
-        <div class="page-sub" style="margin-bottom:16px;">Deployment info: Frontend runs on Netlify. Backend + this admin panel run on Render.com. Payments are simulated until you swap in real KCB / Daraja credentials in the environment variables.</div>
+        <div class="page-sub" style="margin-bottom:16px;">Deployment info: Frontend runs on Netlify. Backend + this admin panel run on the Render backend with a Neon PostgreSQL data mirror. Payments are simulated (sandbox mode) until real M-Pesa (KCB Buni) credentials are set in the environment variables.</div>
       </div>
     </div>
   </div>
@@ -368,7 +368,7 @@ tbody tr:hover{background:rgba(198,161,91,0.04);}
 const API = window.location.origin;
 
 // ============ STATE ============
-let token = localStorage.getItem('mella_admin_token') || '';
+let token = localStorage.getItem('creatives_admin_token') || '';
 let cache = { leaderboard:null, transactions:[], users:[], stats:null };
 
 // ============ HELPERS ============
@@ -406,7 +406,7 @@ async function doLogin() {
     });
     const j = await r.json();
     if (!r.ok) throw new Error(j.error || 'invalid');
-    token = j.token; localStorage.setItem('mella_admin_token', token);
+    token = j.token; localStorage.setItem('creatives_admin_token', token);
     enterApp();
   } catch (e) {
     $('#gateErr').textContent = e.message === 'invalid_credentials' ? 'Wrong password.' : 'Sign in failed.';
@@ -414,7 +414,7 @@ async function doLogin() {
   }
 }
 function logout() {
-  token = ''; localStorage.removeItem('mella_admin_token');
+  token = ''; localStorage.removeItem('creatives_admin_token');
   $('#app').classList.remove('on'); $('#gate').style.display='flex';
   $('#pwd').value=''; $('#gateErr').textContent='';
   $('#signInBtn').disabled = false; $('#signInBtn').textContent='Enter Console';
@@ -669,7 +669,7 @@ $('#exportCsv').addEventListener('click', () => {
   const blob = new Blob([csv], { type:'text/csv' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `mella-transactions-${new Date().toISOString().slice(0,10)}.csv`;
+  a.download = `creatives-transactions-${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
 });
 

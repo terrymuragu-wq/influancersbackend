@@ -1,7 +1,7 @@
 {
-  "name": "creatives-awards-backend",
+  "name": "creatives-award-backend",
   "version": "1.0.0",
-  "description": "Creatives Awards 2026 - Voting Backend API",
+  "description": "Creatives Award 2026 - Voting Backend API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

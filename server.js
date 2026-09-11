@@ -1,4 +1,4 @@
-// server.js — Creatives Awards 2026 API
+// server.js — Creatives Award 2026 API
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -13,18 +13,14 @@ const { v4: uuid } = require('uuid');
 const db = require('./db');
 const { stkPush, simulateConfirm, queryStkStatus, MODE: MPESA_MODE } = require('./mpesa');
 
-// Neon (Postgres) backup layer: exports a full snapshot every 3 minutes and
-// automatically restores from the latest backup if local data is ever lost.
-require('./neon').init(db);
+// Neon mirror backup hook — no-op when DATABASE_URL is unset.
+const neonBackup = require('./neon').backupNow;
+const mirrorToNeon = () => { neonBackup && neonBackup().catch(e => console.error('[neon] backup failed:', e.message)); };
 
 const app = express();
 const PORT = process.env.PORT || 10000;
-// Secrets come ONLY from the environment — nothing sensitive is hardcoded.
-const crypto = require('crypto');
-const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
-if (!process.env.JWT_SECRET) console.warn('[security] JWT_SECRET is not set — using an ephemeral random secret. Set JWT_SECRET in your environment for persistent sessions.');
+const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
-if (!ADMIN_PASSWORD) console.warn('[security] ADMIN_PASSWORD is not set — admin login is DISABLED until you set it in your environment.');
 const VOTE_PRICE = parseInt(process.env.VOTE_PRICE || '20', 10);
 
 // ---- Middleware ----
@@ -77,7 +73,7 @@ function isValidKenyanPhone(p) {
 
 // ---- Health ----
 app.get('/api/health', (req, res) => {
-  res.json({ ok: true, ts: Date.now(), service: 'creatives-awards-api' });
+  res.json({ ok: true, ts: Date.now(), service: 'creatives-award-api' });
 });
 
 // ---- Public: Categories + Nominees + Live Totals ----
@@ -87,9 +83,6 @@ app.get('/api/health', (req, res) => {
 // baseline table via /api/sync/floor, and every subsequent visitor sees them
 // immediately. Numbers never move backwards for any user.
 app.get('/api/categories', (req, res) => {
-  // Hygiene: never let orphan floor rows (nominees removed from the catalogue)
-  // inflate or resurrect phantom votes.
-  try { db.prepare('DELETE FROM vote_baseline WHERE nominee_id NOT IN (SELECT id FROM nominees)').run(); } catch {}
   const cats = db.prepare('SELECT id, title, ordinal FROM categories ORDER BY ordinal').all();
   const noms = db.prepare(`
     SELECT n.id, n.category_id, n.name, n.detail, n.base_votes, n.paid_votes, n.ordinal,
@@ -240,22 +233,12 @@ app.post('/api/vote/initiate', async (req, res) => {
   const votes = Math.floor(amt / VOTE_PRICE);
 
   try {
-    // Bound the upstream wait: KCB must answer within 20s or we fail fast with
-    // a clear error instead of hanging the voter's phone panel.
-    const stk = await Promise.race([
-      stkPush({
-        phone: p,
-        amount: amt,
-        accountRef: 'MELLA' + nominee.id.slice(0, 6).toUpperCase(),
-        description: `Vote for ${nominee.name}`,
-      }),
-      new Promise((_, rej) => setTimeout(() => rej(new Error('stk_timeout')), 20000)),
-    ]);
-
-    if (!stk || !stk.CheckoutRequestID) {
-      console.error('STK push returned no CheckoutRequestID:', JSON.stringify(stk).slice(0, 300));
-      return res.status(502).json({ error: 'stk_failed', message: 'Payment provider did not accept the request.' });
-    }
+    const stk = await stkPush({
+      phone: p,
+      amount: amt,
+      accountRef: 'CRTV' + nominee.id.slice(0, 8).toUpperCase(),
+      description: `Vote for ${nominee.name}`,
+    });
 
     const txId = uuid();
     db.prepare(`INSERT INTO transactions
@@ -276,9 +259,7 @@ app.post('/api/vote/initiate', async (req, res) => {
     });
   } catch (err) {
     console.error('STK error:', err);
-    res.status(err && err.message === 'stk_timeout' ? 504 : 500).json({
-      error: err && err.message === 'stk_timeout' ? 'stk_timeout' : 'stk_failed',
-    });
+    res.status(500).json({ error: 'stk_failed' });
   }
 });
 
@@ -349,6 +330,7 @@ function finaliseSuccess(tx, receipt) {
     // Unlimited voting — no per-device / per-category lock is recorded.
   });
   update();
+  mirrorToNeon();
 }
 
 function finaliseFailure(tx) {
@@ -443,7 +425,7 @@ app.post('/callback', handleMpesaCallback);
 app.post('/api/admin/login', (req, res) => {
   const { password } = req.body || {};
   if (!password) return res.status(400).json({ error: 'missing_password' });
-  if (!ADMIN_PASSWORD || password !== ADMIN_PASSWORD) return res.status(401).json({ error: 'invalid_credentials' });
+  if (password !== ADMIN_PASSWORD) return res.status(401).json({ error: 'invalid_credentials' });
   const token = sign({ admin: true, iat: Date.now() });
   res.json({ token });
 });
@@ -541,6 +523,7 @@ app.post('/api/admin/adjust-votes', requireAdmin, (req, res) => {
   }
 
   const updated = db.prepare('SELECT id, name, base_votes, paid_votes, (base_votes + paid_votes) AS votes FROM nominees WHERE id=?').get(nomineeId);
+  mirrorToNeon();
   res.json({ ok: true, nominee: updated });
 });
 
@@ -625,7 +608,7 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`\n🏆  Creatives Awards 2026 API listening on :${PORT}`);
+  console.log(`\n🏆  Creatives Award 2026 API listening on :${PORT}`);
   console.log(`   Mode: ${process.env.NODE_ENV || 'development'}`);
   console.log(`   Admin panel: http://localhost:${PORT}/admin\n`);
 });
