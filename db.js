@@ -123,7 +123,7 @@ try {
   }
 } catch (e) { console.error('[db] device_votes migration error:', e); }
 
-// ---- Seed data (Creatives Awards 2026 — ONE category: Influencers of the Year) ----
+// ---- Seed data (TRANS-NZOIA Mella Awards 2026 — ONE category: Influencers of the Year) ----
 const SEED_VERSION = 'v2-2026-influencers-of-the-year';
 
 const seedCategories = [
@@ -183,7 +183,7 @@ const currentSeed = seedRow ? seedRow.value : null;
 if (catCount === 0) {
   seedAll();
   db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run('seed_version', SEED_VERSION);
-  console.log('[db] Seeded Creatives Awards 2026 categories and nominees.');
+  console.log('[db] Seeded TRANS-NZOIA Mella Awards categories and nominees.');
 } else if (currentSeed !== SEED_VERSION) {
   // Existing DB from an older seed — replace category/nominee catalogue but keep votes/transactions history intact.
   // Foreign keys are disabled for the duration of the swap so historical
@@ -207,7 +207,7 @@ if (catCount === 0) {
 // Countdown init
 const cdRow = db.prepare('SELECT value FROM settings WHERE key = ?').get('countdown_end');
 if (!cdRow) {
-  const days = parseInt(process.env.COUNTDOWN_DAYS || '28', 10);
+  const days = parseInt(process.env.COUNTDOWN_DAYS || '20', 10);
   const end = Date.now() + days * 24 * 60 * 60 * 1000;
   db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run('countdown_end', String(end));
 }
