@@ -128,7 +128,7 @@ const SEED_VERSION = 'v2-2026-influencers-of-the-year';
 
 const seedCategories = [
   { id: 'influencers-of-the-year', title: 'Influencers of the Year', nominees: [
-    ['Saint_millani', 'Instagram'],
+    ['Saint_millan', 'Instagram'],
     ['who.ismishy', 'Instagram'],
     ['I.t.s.f.a.b.i.a.n_', 'Instagram'],
     ['Mr_mombasa', 'Instagram'],
@@ -138,7 +138,6 @@ const seedCategories = [
     ['O.yugi._', 'Instagram'],
     ['___j__zilster___', 'Instagram'],
     ['I_am_kamasho', 'Instagram'],
-    ['Saint_millan', 'Instagram'],
   ]},
 ];
 
