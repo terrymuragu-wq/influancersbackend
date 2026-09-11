@@ -124,10 +124,11 @@ try {
 } catch (e) { console.error('[db] device_votes migration error:', e); }
 
 // ---- Seed data (Creatives Awards 2026 — ONE category: Influencers of the Year) ----
-const SEED_VERSION = 'v2-2026-influencers-of-the-year';
+const SEED_VERSION = 'v3-2026-influencers-of-the-year-dedup';
 
 const seedCategories = [
   { id: 'influencers-of-the-year', title: 'Influencers of the Year', nominees: [
+    ['Saint_millan', 'Instagram'],
     ['who.ismishy', 'Instagram'],
     ['I.t.s.f.a.b.i.a.n_', 'Instagram'],
     ['Mr_mombasa', 'Instagram'],
@@ -137,7 +138,6 @@ const seedCategories = [
     ['O.yugi._', 'Instagram'],
     ['___j__zilster___', 'Instagram'],
     ['I_am_kamasho', 'Instagram'],
-    ['Saint_millan', 'Instagram'],
   ]},
 ];
 
@@ -192,6 +192,31 @@ if (catCount === 0) {
   db.pragma('foreign_keys = OFF');
   try {
     const wipe = db.transaction(() => {
+      // PRESERVE VOTES across the swap: for every old nominee whose (category,
+      // name) still exists in the new seed, fold its current displayed total
+      // (db votes AND floor) into the persistent floor under the NEW
+      // deterministic id. Nothing is lost — numbers only ever move up.
+      const newIdsByKey = new Map();
+      seedCategories.forEach(cat => cat.nominees.forEach(n => {
+        newIdsByKey.set(cat.id + '|' + n[0], deterministicNomineeId(cat.id, n[0]));
+      }));
+      const oldNoms = db.prepare(`
+        SELECT n.id, n.category_id, n.name, (n.base_votes + n.paid_votes) AS v,
+               COALESCE(vb.base, 0) AS floor
+        FROM nominees n LEFT JOIN vote_baseline vb ON vb.nominee_id = n.id
+      `).all();
+      const upFloor = db.prepare(`
+        INSERT INTO vote_baseline (nominee_id, base, updated_at) VALUES (?, ?, ?)
+        ON CONFLICT(nominee_id) DO UPDATE SET
+          base = MAX(vote_baseline.base, excluded.base),
+          updated_at = excluded.updated_at
+      `);
+      oldNoms.forEach(n => {
+        const newId = newIdsByKey.get(n.category_id + '|' + n.name);
+        if (!newId) return; // removed from the catalogue (e.g. duplicate/typo row) — its votes are dropped with it
+        const carry = Math.max(n.v || 0, n.floor || 0);
+        if (carry > 0) upFloor.run(newId, carry, Date.now());
+      });
       db.prepare('DELETE FROM nominees').run();
       db.prepare('DELETE FROM categories').run();
     });
@@ -200,9 +225,17 @@ if (catCount === 0) {
     db.pragma('foreign_keys = ON');
   }
   seedAll();
+  // Remove floor rows that point at nominees which no longer exist (e.g. the
+  // old 'Saint_millani' duplicate) so they can never resurrect phantom votes.
+  db.prepare('DELETE FROM vote_baseline WHERE nominee_id NOT IN (SELECT id FROM nominees)').run();
   db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run('seed_version', SEED_VERSION);
   console.log('[db] Re-seeded categories/nominees to ' + SEED_VERSION);
 }
+
+// Boot-time hygiene: drop any orphan floor rows (defence against older bugs).
+try {
+  db.prepare('DELETE FROM vote_baseline WHERE nominee_id NOT IN (SELECT id FROM nominees)').run();
+} catch (e) { /* ignore */ }
 
 // Countdown init
 const cdRow = db.prepare('SELECT value FROM settings WHERE key = ?').get('countdown_end');

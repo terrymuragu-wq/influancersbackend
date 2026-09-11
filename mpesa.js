@@ -18,6 +18,10 @@ const KCB_STK_ENDPOINT = process.env.KCB_STK_ENDPOINT || `${KCB_BASE_URL.replace
 const KCB_QUERY_ENDPOINT = process.env.KCB_QUERY_ENDPOINT || `${KCB_BASE_URL.replace(/\/$/, '')}/mm/api/request/1.0.0/stkpushquery`;
 const MODE = (process.env.MPESA_MODE || (KCB_ENV === 'production' ? 'live' : 'sandbox')).toLowerCase();
 
+// Hard network ceiling for every outbound KCB call — a hung upstream can never
+// wedge the API. AbortSignal.timeout is built into Node 18+.
+const KCB_TIMEOUT_MS = parseInt(process.env.KCB_TIMEOUT_MS || '12000', 10);
+
 // In-memory state for pending simulated transactions (sandbox mode only)
 const pending = new Map();
 
@@ -49,6 +53,7 @@ async function getAccessToken() {
       'Accept': 'application/json',
     },
     body: body.toString(),
+    signal: AbortSignal.timeout(KCB_TIMEOUT_MS),
   });
 
   if (!resp.ok) {
@@ -136,6 +141,7 @@ async function stkPush({ phone, amount, accountRef, description }) {
       method: 'POST',
       headers,
       body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(KCB_TIMEOUT_MS),
     });
 
     const text = await resp.text();
@@ -206,6 +212,7 @@ async function queryStkStatus(checkoutId) {
       method: 'POST',
       headers,
       body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(KCB_TIMEOUT_MS),
     });
     const text = await resp.text();
     let body;

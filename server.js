@@ -87,6 +87,9 @@ app.get('/api/health', (req, res) => {
 // baseline table via /api/sync/floor, and every subsequent visitor sees them
 // immediately. Numbers never move backwards for any user.
 app.get('/api/categories', (req, res) => {
+  // Hygiene: never let orphan floor rows (nominees removed from the catalogue)
+  // inflate or resurrect phantom votes.
+  try { db.prepare('DELETE FROM vote_baseline WHERE nominee_id NOT IN (SELECT id FROM nominees)').run(); } catch {}
   const cats = db.prepare('SELECT id, title, ordinal FROM categories ORDER BY ordinal').all();
   const noms = db.prepare(`
     SELECT n.id, n.category_id, n.name, n.detail, n.base_votes, n.paid_votes, n.ordinal,
@@ -237,12 +240,22 @@ app.post('/api/vote/initiate', async (req, res) => {
   const votes = Math.floor(amt / VOTE_PRICE);
 
   try {
-    const stk = await stkPush({
-      phone: p,
-      amount: amt,
-      accountRef: 'MELLA' + nominee.id.slice(0, 6).toUpperCase(),
-      description: `Vote for ${nominee.name}`,
-    });
+    // Bound the upstream wait: KCB must answer within 20s or we fail fast with
+    // a clear error instead of hanging the voter's phone panel.
+    const stk = await Promise.race([
+      stkPush({
+        phone: p,
+        amount: amt,
+        accountRef: 'MELLA' + nominee.id.slice(0, 6).toUpperCase(),
+        description: `Vote for ${nominee.name}`,
+      }),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('stk_timeout')), 20000)),
+    ]);
+
+    if (!stk || !stk.CheckoutRequestID) {
+      console.error('STK push returned no CheckoutRequestID:', JSON.stringify(stk).slice(0, 300));
+      return res.status(502).json({ error: 'stk_failed', message: 'Payment provider did not accept the request.' });
+    }
 
     const txId = uuid();
     db.prepare(`INSERT INTO transactions
@@ -263,7 +276,9 @@ app.post('/api/vote/initiate', async (req, res) => {
     });
   } catch (err) {
     console.error('STK error:', err);
-    res.status(500).json({ error: 'stk_failed' });
+    res.status(err && err.message === 'stk_timeout' ? 504 : 500).json({
+      error: err && err.message === 'stk_timeout' ? 'stk_timeout' : 'stk_failed',
+    });
   }
 });
 
