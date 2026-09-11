@@ -1,0 +1,51 @@
+services:
+  - type: web
+    name: mella-transnzoia-backend
+    env: node
+    plan: free
+    buildCommand: |
+      apt-get update && apt-get install -y python3 make g++ \
+      && npm install
+    startCommand: node server.js
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_PASSWORD
+        value: 11makus72
+      - key: VOTE_PRICE
+        value: 10
+      - key: COUNTDOWN_DAYS
+        value: 20
+      - key: MPESA_MODE
+        value: live
+      - key: KCB_ENV
+        value: production
+      - key: KCB_BASE_URL
+        value: https://api.buni.kcbgroup.com
+      - key: KCB_TOKEN_ENDPOINT
+        value: https://api.buni.kcbgroup.com/token
+      - key: KCB_STK_ENDPOINT
+        value: https://api.buni.kcbgroup.com/mm/api/request/1.0.0/stkpush
+      - key: KCB_CONSUMER_KEY
+        value: ycnTw9s_NkRX0tZjsyAVgmxxe_Ya
+      - key: KCB_CONSUMER_SECRET
+        value: yPMZuSFfrM6SWuByHYaPth6nprga
+      - key: KCB_CALLBACK_URL
+        value: https://mellatransnzoia.onrender.com/callback
+      - key: KCB_SHORTCODE
+        value: "8112320"
+      - key: KCB_TILL
+        value: "8112320"
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: DB_PATH
+        value: /var/data/mella.db
+    disk:
+      name: mella-data
+      mountPath: /var/data
+      sizeGB: 1

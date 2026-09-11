@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TRANS-NZOIA Mella Awards — Organiser Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0908; --bg-panel:#141110; --bg-card:#1a1613; --bg-card2:#221c17;
+  --gold:#c6a15b; --gold-bright:#e8ca8f; --maroon:#7a1a28; --maroon-bright:#a4283b;
+  --cream:#f4ede0; --muted:#9c9284; --muted-2:#6a5f52;
+  --line:rgba(198,161,91,0.16); --line-bright:rgba(198,161,91,0.42);
+  --green:#4c8c5c; --green-bright:#6fbf82; --red:#c96a6a; --detail:#7fd6c2; --blue:#7aa6d4;
+  --shadow:0 20px 60px -25px rgba(0,0,0,0.7);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:var(--bg);color:var(--cream);font-family:'Inter',sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:
+  radial-gradient(ellipse 900px 500px at 10% -5%, rgba(198,161,91,0.09), transparent 60%),
+  radial-gradient(ellipse 700px 500px at 95% 5%, rgba(122,26,40,0.16), transparent 60%);}
+.mono{font-family:'IBM Plex Mono',monospace;}
+button,input,select{font-family:inherit;}
+a{color:inherit;text-decoration:none;}
+
+/* ---- LOGIN GATE ---- */
+.gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;z-index:1;}
+.gate-box{width:100%;max-width:420px;background:var(--bg-panel);border:1px solid var(--line-bright);border-radius:20px;padding:44px 38px;box-shadow:var(--shadow);animation:slideUp .5s cubic-bezier(.2,.9,.3,1.2);}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);}}
+.gate-seal{display:flex;align-items:center;gap:14px;margin-bottom:26px;}
+.gate-seal svg{width:44px;height:44px;}
+.gate-seal-t{font-family:'Fraunces',serif;font-size:19px;font-weight:600;}
+.gate-seal-t span{display:block;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:3px;color:var(--gold);margin-top:3px;}
+.gate-title{font-family:'Fraunces',serif;font-size:26px;font-weight:600;margin-bottom:6px;}
+.gate-sub{font-size:13px;color:var(--muted);margin-bottom:26px;}
+.gate-field{width:100%;padding:16px;border-radius:12px;border:1px solid var(--line-bright);background:#0f0d0b;color:var(--cream);font-family:'IBM Plex Mono',monospace;font-size:16px;outline:none;letter-spacing:2px;}
+.gate-field:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(198,161,91,0.14);}
+.gate-btn{width:100%;margin-top:16px;padding:15px;border-radius:12px;border:none;background:var(--gold);color:#1a1410;font-weight:700;font-size:14px;letter-spacing:0.3px;cursor:pointer;transition:all .15s;}
+.gate-btn:hover:not(:disabled){background:var(--gold-bright);transform:translateY(-1px);}
+.gate-btn:disabled{background:#3a352c;color:#6a655a;cursor:not-allowed;}
+.gate-err{color:var(--red);font-size:12px;margin-top:10px;min-height:16px;text-align:center;}
+
+/* ---- DASHBOARD ---- */
+.app{display:none;position:relative;z-index:1;}
+.app.on{display:block;}
+
+.topbar{padding:20px 40px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:rgba(11,9,8,0.85);backdrop-filter:blur(10px);position:sticky;top:0;z-index:10;}
+.brand{display:flex;align-items:center;gap:14px;}
+.brand svg{width:36px;height:36px;}
+.brand-t{font-family:'Fraunces',serif;font-size:17px;font-weight:600;}
+.brand-t span{display:block;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--gold);margin-top:2px;}
+.top-actions{display:flex;gap:10px;align-items:center;}
+.live-pill{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;padding:8px 14px;border:1px solid var(--line);border-radius:100px;}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green-bright);box-shadow:0 0 0 4px rgba(111,191,130,0.18);animation:pulse 1.6s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.5;}}
+.top-btn{padding:9px 16px;border-radius:8px;border:1px solid var(--line);color:var(--cream);background:transparent;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;}
+.top-btn:hover{border-color:var(--line-bright);background:var(--bg-card);}
+
+.tabs{padding:0 40px;display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{padding:16px 20px;font-size:13px;font-weight:500;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:all .15s;}
+.tab:hover{color:var(--cream);}
+.tab.active{color:var(--gold-bright);border-color:var(--gold);}
+
+.page{padding:32px 40px 80px;max-width:1400px;margin:0 auto;}
+.page-hidden{display:none;}
+.page-title{font-family:'Fraunces',serif;font-size:28px;font-weight:600;margin-bottom:6px;}
+.page-sub{font-size:13px;color:var(--muted);margin-bottom:28px;}
+
+/* Stats */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:32px;}
+.stat{background:linear-gradient(140deg,var(--bg-card) 0%,var(--bg-card2) 100%);border:1px solid var(--line);border-radius:16px;padding:22px;transition:all .25s;position:relative;overflow:hidden;}
+.stat:hover{border-color:var(--line-bright);transform:translateY(-2px);}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),transparent);opacity:0.5;}
+.stat-lab{font-size:10.5px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;}
+.stat-val{font-family:'IBM Plex Mono',monospace;font-size:32px;font-weight:600;color:var(--gold-bright);margin-top:10px;line-height:1;}
+.stat-sub{font-size:11.5px;color:var(--muted-2);margin-top:8px;font-family:'IBM Plex Mono',monospace;}
+.stat.wallet .stat-val{color:var(--green-bright);}
+.stat.wallet::before{background:linear-gradient(90deg,var(--green),transparent);}
+
+/* Toolbar */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;align-items:center;}
+.search{flex:1;min-width:200px;max-width:340px;padding:10px 14px;border-radius:9px;border:1px solid var(--line);background:var(--bg-card);color:var(--cream);font-size:13px;outline:none;}
+.search:focus{border-color:var(--line-bright);}
+.filter-select{padding:10px 14px;border-radius:9px;border:1px solid var(--line);background:var(--bg-card);color:var(--cream);font-size:13px;outline:none;cursor:pointer;}
+.action-btn{padding:10px 16px;border-radius:9px;border:1px solid var(--line-bright);background:transparent;color:var(--cream);font-size:12.5px;font-weight:500;cursor:pointer;transition:all .15s;}
+.action-btn:hover{background:var(--bg-card);}
+.action-btn.gold{background:var(--gold);color:#1a1410;border-color:var(--gold);font-weight:600;}
+.action-btn.gold:hover{background:var(--gold-bright);}
+
+/* Table */
+.tbl-wrap{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--bg-panel);}
+.tbl-wrap.scroll{max-height:600px;overflow-y:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{position:sticky;top:0;text-align:left;padding:14px 18px;background:var(--bg-card);font-size:10.5px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--line);z-index:1;}
+tbody td{padding:14px 18px;border-bottom:1px solid var(--line);}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr{transition:background .15s;}
+tbody tr:hover{background:rgba(198,161,91,0.04);}
+.cat-row td{background:rgba(198,161,91,0.06);font-weight:600;color:var(--gold-bright);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1.2px;text-transform:uppercase;padding:11px 18px;}
+.num-cell{font-family:'IBM Plex Mono',monospace;text-align:right;color:var(--cream);}
+.badge{display:inline-block;padding:3px 10px;border-radius:100px;font-size:10.5px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;}
+.badge.success{background:rgba(76,140,92,0.16);color:var(--green-bright);border:1px solid rgba(76,140,92,0.4);}
+.badge.pending{background:rgba(198,161,91,0.14);color:var(--gold-bright);border:1px solid rgba(198,161,91,0.4);}
+.badge.failed{background:rgba(201,106,106,0.14);color:var(--red);border:1px solid rgba(201,106,106,0.4);}
+.leading-cell{color:var(--gold-bright);font-weight:600;}
+.icon-btn{padding:6px 10px;border-radius:7px;border:1px solid var(--line);background:transparent;color:var(--muted);font-size:11.5px;cursor:pointer;transition:all .15s;font-weight:500;margin-right:4px;}
+.icon-btn:hover{color:var(--cream);border-color:var(--line-bright);}
+.icon-btn.gold{color:var(--gold-bright);border-color:var(--gold);}
+.icon-btn.gold:hover{background:var(--gold);color:#1a1410;}
+.icon-btn.red{color:var(--red);}
+.icon-btn.red:hover{background:rgba(201,106,106,0.12);border-color:var(--red);}
+
+/* Empty state */
+.empty{padding:60px 20px;text-align:center;color:var(--muted);}
+.empty svg{width:40px;height:40px;margin-bottom:14px;opacity:0.4;}
+
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(6,4,3,0.78);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}
+.overlay.on{display:flex;animation:fadeIn .2s;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.mdl{width:100%;max-width:440px;background:var(--bg-panel);border:1px solid var(--line-bright);border-radius:18px;padding:34px;box-shadow:var(--shadow);animation:slideUp .3s cubic-bezier(.2,.9,.3,1.2);}
+.mdl-t{font-family:'Fraunces',serif;font-size:22px;font-weight:600;margin-bottom:6px;}
+.mdl-s{font-size:13px;color:var(--muted);margin-bottom:22px;}
+.field-lab{font-size:11.5px;color:var(--muted);letter-spacing:0.5px;margin:14px 0 8px;display:block;}
+.field-in{width:100%;padding:14px;border-radius:11px;border:1px solid var(--line-bright);background:#0f0d0b;color:var(--cream);font-family:'IBM Plex Mono',monospace;font-size:15px;outline:none;}
+.field-in:focus{border-color:var(--gold);}
+.mdl-actions{display:flex;gap:10px;margin-top:22px;}
+.mdl-actions .action-btn{flex:1;}
+
+/* Notification toast */
+.toast{position:fixed;top:22px;right:22px;background:var(--bg-panel);border:1px solid var(--line-bright);border-radius:12px;padding:14px 20px;box-shadow:var(--shadow);font-size:13px;z-index:200;animation:slideIn .3s;display:none;}
+.toast.on{display:block;}
+.toast.success{border-color:rgba(76,140,92,0.5);}
+.toast.err{border-color:rgba(201,106,106,0.5);}
+@keyframes slideIn{from{opacity:0;transform:translateX(30px);}to{opacity:1;transform:translateX(0);}}
+
+/* Countdown card */
+.cd-card{background:linear-gradient(135deg,rgba(122,26,40,0.15),rgba(198,161,91,0.08));border:1px solid var(--line-bright);border-radius:16px;padding:24px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;}
+.cd-l{font-family:'Fraunces',serif;font-size:19px;font-weight:600;}
+.cd-timer{font-family:'IBM Plex Mono',monospace;font-size:24px;color:var(--gold-bright);font-weight:600;}
+.cd-form{display:flex;gap:8px;}
+.cd-in{width:80px;padding:9px 12px;border-radius:8px;border:1px solid var(--line-bright);background:#0f0d0b;color:var(--cream);font-family:'IBM Plex Mono',monospace;font-size:14px;outline:none;text-align:center;}
+
+/* Responsive */
+@media(max-width:768px){
+  .topbar{padding:16px 20px;}
+  .tabs{padding:0 20px;}
+  .page{padding:24px 20px 60px;}
+  .stat-val{font-size:26px;}
+  thead th, tbody td{padding:12px 14px;font-size:12px;}
+  .cd-card{flex-direction:column;align-items:flex-start;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN GATE -->
+<div class="gate" id="gate">
+  <div class="gate-box">
+    <div class="gate-seal">
+      <svg viewBox="0 0 40 40" fill="none">
+        <circle cx="20" cy="20" r="19" stroke="#c6a15b" stroke-width="1.2"/>
+        <circle cx="20" cy="20" r="14" stroke="#c6a15b" stroke-width="0.7"/>
+        <path d="M20 10 L22.5 17 L30 17 L23.8 21.6 L26.2 29 L20 24.4 L13.8 29 L16.2 21.6 L10 17 L17.5 17 Z" fill="#c6a15b"/>
+      </svg>
+      <div class="gate-seal-t">TRANS-NZOIA Mella Awards<span>ORGANISER CONSOLE</span></div>
+    </div>
+    <div class="gate-title">Sign in</div>
+    <div class="gate-sub">Restricted access. Enter the organiser password to continue.</div>
+    <label class="field-lab">Password</label>
+    <input type="password" id="pwd" class="gate-field" placeholder="••••••••" autocomplete="off">
+    <div class="gate-err" id="gateErr"></div>
+    <button class="gate-btn" id="signInBtn">Enter Console</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="app" id="app">
+  <div class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 40 40" fill="none">
+        <circle cx="20" cy="20" r="19" stroke="#c6a15b" stroke-width="1.2"/>
+        <circle cx="20" cy="20" r="14" stroke="#c6a15b" stroke-width="0.7"/>
+        <path d="M20 10 L22.5 17 L30 17 L23.8 21.6 L26.2 29 L20 24.4 L13.8 29 L16.2 21.6 L10 17 L17.5 17 Z" fill="#c6a15b"/>
+      </svg>
+      <div class="brand-t">TRANS-NZOIA Mella<span>ORGANISER CONSOLE · 2026</span></div>
+    </div>
+    <div class="top-actions">
+      <div class="live-pill"><span class="live-dot"></span>Live</div>
+      <button class="top-btn" id="refreshBtn">↻ Refresh</button>
+      <button class="top-btn" id="logoutBtn">Sign out</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="overview">Overview</div>
+    <div class="tab" data-tab="leaderboard">Leaderboard</div>
+    <div class="tab" data-tab="transactions">Transactions</div>
+    <div class="tab" data-tab="voters">Voters</div>
+    <div class="tab" data-tab="settings">Settings</div>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div class="page" id="page-overview">
+    <div class="page-title">Overview</div>
+    <div class="page-sub">Real-time snapshot of votes, wallet balance, and activity.</div>
+
+    <div class="cd-card">
+      <div>
+        <div class="cd-l">Voting closes in</div>
+        <div class="cd-timer" id="cdTimer">— days</div>
+      </div>
+      <div class="cd-form">
+        <input type="number" id="cdDays" class="cd-in" placeholder="20" min="1">
+        <button class="action-btn gold" id="cdSet">Reset days</button>
+      </div>
+    </div>
+
+    <div class="stat-grid" id="statGrid"></div>
+
+    <div class="page-title" style="font-size:19px;margin-top:14px;">Recent activity</div>
+    <div class="page-sub">Last 30 transactions from the payment gateway.</div>
+    <div class="tbl-wrap scroll">
+      <table>
+        <thead><tr>
+          <th>When</th><th>Nominee</th><th>Phone</th><th>Amount</th><th>Votes</th><th>Receipt</th><th>Status</th>
+        </tr></thead>
+        <tbody id="feedBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div class="page page-hidden" id="page-leaderboard">
+    <div class="page-title">Leaderboard</div>
+    <div class="page-sub">All categories ranked by total votes. Adjust base votes to bump favourites.</div>
+    <div class="toolbar">
+      <input type="text" class="search" id="lbSearch" placeholder="Search nominee…">
+      <button class="action-btn gold" id="addNominee">＋ Add nominee</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Nominee</th><th>Detail</th>
+          <th class="num-cell">Paid</th>
+          <th class="num-cell">Bonus</th>
+          <th class="num-cell">Total</th>
+          <th style="text-align:right;">Adjust</th>
+        </tr></thead>
+        <tbody id="lbBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TRANSACTIONS -->
+  <div class="page page-hidden" id="page-transactions">
+    <div class="page-title">Transactions</div>
+    <div class="page-sub">Every payment attempt — successful, pending, or failed.</div>
+    <div class="toolbar">
+      <input type="text" class="search" id="txSearch" placeholder="Search phone / nominee / receipt…">
+      <select class="filter-select" id="txFilter">
+        <option value="all">All statuses</option>
+        <option value="success">Success</option>
+        <option value="pending">Pending</option>
+        <option value="failed">Failed</option>
+      </select>
+      <button class="action-btn" id="exportCsv">↓ Export CSV</button>
+    </div>
+    <div class="tbl-wrap scroll">
+      <table>
+        <thead><tr>
+          <th>When</th><th>Nominee</th><th>Phone</th>
+          <th class="num-cell">Amount</th><th class="num-cell">Votes</th>
+          <th>Receipt</th><th>Status</th>
+        </tr></thead>
+        <tbody id="txBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- VOTERS -->
+  <div class="page page-hidden" id="page-voters">
+    <div class="page-title">Voters</div>
+    <div class="page-sub">Registered accounts and their contribution.</div>
+    <div class="toolbar">
+      <input type="text" class="search" id="usrSearch" placeholder="Search name or phone…">
+    </div>
+    <div class="tbl-wrap scroll">
+      <table>
+        <thead><tr>
+          <th>Name</th><th>Phone</th><th>Joined</th>
+          <th class="num-cell">Success TX</th>
+          <th class="num-cell">Total spent</th>
+          <th class="num-cell">Votes cast</th>
+        </tr></thead>
+        <tbody id="usrBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="page page-hidden" id="page-settings">
+    <div class="page-title">Settings</div>
+    <div class="page-sub">Environment info and quick actions.</div>
+    <div class="tbl-wrap" style="padding:24px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;">
+        <div>
+          <div class="stat-lab">Vote price</div>
+          <div class="stat-val" id="setPrice">— KES</div>
+        </div>
+        <div>
+          <div class="stat-lab">Countdown ends</div>
+          <div class="stat-val" style="font-size:18px;" id="setCd">—</div>
+        </div>
+        <div>
+          <div class="stat-lab">API endpoint</div>
+          <div class="stat-val" style="font-size:14px;word-break:break-all;" id="setApi">—</div>
+        </div>
+      </div>
+      <div style="margin-top:28px;padding-top:24px;border-top:1px solid var(--line);">
+        <div class="page-sub" style="margin-bottom:16px;">Deployment info: Frontend runs on Netlify. Backend + this admin panel run on Render.com. Payments are simulated until you swap in real KCB / Daraja credentials in the environment variables.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADJUST VOTES MODAL -->
+<div class="overlay" id="adjustMdl">
+  <div class="mdl">
+    <div class="mdl-t">Adjust votes</div>
+    <div class="mdl-s" id="adjustFor">—</div>
+    <label class="field-lab">Add / remove votes (bonus)</label>
+    <input type="number" class="field-in" id="adjustDelta" placeholder="e.g. +50 or -10">
+    <label class="field-lab">Or set bonus votes to exactly</label>
+    <input type="number" class="field-in" id="adjustSet" placeholder="e.g. 100" min="0">
+    <div class="mdl-actions">
+      <button class="action-btn" id="adjustCancel">Cancel</button>
+      <button class="action-btn gold" id="adjustSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD NOMINEE MODAL -->
+<div class="overlay" id="addMdl">
+  <div class="mdl">
+    <div class="mdl-t">Add a nominee</div>
+    <div class="mdl-s">New nominees appear at the bottom of their category.</div>
+    <label class="field-lab">Category</label>
+    <select class="field-in" id="addCat"></select>
+    <label class="field-lab">Nominee name</label>
+    <input type="text" class="field-in" id="addName" placeholder="e.g. MC Wanjiku">
+    <label class="field-lab">Short detail (optional)</label>
+    <input type="text" class="field-in" id="addDetail" placeholder="e.g. Weddings Specialist">
+    <div class="mdl-actions">
+      <button class="action-btn" id="addCancel">Cancel</button>
+      <button class="action-btn gold" id="addSave">Add nominee</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============ API CONFIG ============
+// Since admin.html is served BY the backend, same-origin.
+const API = window.location.origin;
+
+// ============ STATE ============
+let token = localStorage.getItem('mella_admin_token') || '';
+let cache = { leaderboard:null, transactions:[], users:[], stats:null };
+
+// ============ HELPERS ============
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+function api(path, opts = {}) {
+  const headers = { 'Content-Type':'application/json', ...(opts.headers||{}) };
+  if (token) headers.Authorization = 'Bearer ' + token;
+  return fetch(API + path, { ...opts, headers, body: opts.body ? JSON.stringify(opts.body) : undefined })
+    .then(async r => {
+      if (r.status === 401) { logout(); throw new Error('unauthorised'); }
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw Object.assign(new Error(j.error || 'error'), { status: r.status, data: j });
+      return j;
+    });
+}
+function toast(msg, kind='success') {
+  const t = $('#toast'); t.textContent = msg; t.className = 'toast on ' + kind;
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('on'), 2600);
+}
+function fmt(n) { return Number(n||0).toLocaleString('en-KE'); }
+function fmtDate(ms) { if (!ms) return '—'; const d = new Date(ms); return d.toLocaleString('en-KE',{ dateStyle:'short', timeStyle:'short' }); }
+function statusBadge(s){ return `<span class="badge ${s}">${s}</span>`; }
+function maskPhone(p){ return p ? p.slice(0,6) + '***' + p.slice(-3) : '—'; }
+
+// ============ LOGIN ============
+async function doLogin() {
+  const pwd = $('#pwd').value.trim();
+  if (!pwd) return;
+  const btn = $('#signInBtn'); btn.disabled = true; btn.textContent = 'Signing in…';
+  try {
+    const r = await fetch(API + '/api/admin/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ password: pwd })
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || 'invalid');
+    token = j.token; localStorage.setItem('mella_admin_token', token);
+    enterApp();
+  } catch (e) {
+    $('#gateErr').textContent = e.message === 'invalid_credentials' ? 'Wrong password.' : 'Sign in failed.';
+    btn.disabled = false; btn.textContent = 'Enter Console';
+  }
+}
+function logout() {
+  token = ''; localStorage.removeItem('mella_admin_token');
+  $('#app').classList.remove('on'); $('#gate').style.display='flex';
+  $('#pwd').value=''; $('#gateErr').textContent='';
+  $('#signInBtn').disabled = false; $('#signInBtn').textContent='Enter Console';
+  clearInterval(refreshTimer);
+}
+
+async function verifyToken() {
+  if (!token) return false;
+  try { await api('/api/admin/verify'); return true; }
+  catch { return false; }
+}
+
+async function enterApp() {
+  $('#gate').style.display='none';
+  $('#app').classList.add('on');
+  await refreshAll();
+  refreshTimer = setInterval(refreshAll, 5000); // auto-refresh every 5s
+}
+
+// ============ TABS ============
+$$('.tab').forEach(t => t.addEventListener('click', () => {
+  $$('.tab').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  const tab = t.dataset.tab;
+  $$('.page').forEach(p => p.classList.add('page-hidden'));
+  $('#page-' + tab).classList.remove('page-hidden');
+}));
+
+// ============ DATA LOADING ============
+let refreshTimer;
+async function refreshAll() {
+  try {
+    const [stats, lb, txs, usrs] = await Promise.all([
+      api('/api/admin/stats'),
+      api('/api/admin/leaderboard'),
+      api('/api/admin/transactions?limit=500'),
+      api('/api/admin/users'),
+    ]);
+    cache.stats = stats; cache.leaderboard = lb; cache.transactions = txs.transactions; cache.users = usrs.users;
+    renderStats(); renderLeaderboard(); renderTransactions(); renderUsers(); renderFeed(); renderSettings();
+    updateCountdown();
+  } catch (e) {
+    if (e.status !== 401) console.error(e);
+  }
+}
+
+// ============ RENDER: STATS ============
+function renderStats() {
+  const s = cache.stats; if (!s) return;
+  $('#statGrid').innerHTML = `
+    <div class="stat wallet">
+      <div class="stat-lab">Wallet balance</div>
+      <div class="stat-val">KES ${fmt(s.wallet)}</div>
+      <div class="stat-sub">${s.successCount} successful transactions</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lab">Total votes</div>
+      <div class="stat-val">${fmt(s.totalVotes)}</div>
+      <div class="stat-sub">${fmt(s.paidVotes)} paid • ${fmt(s.totalVotes - s.paidVotes)} bonus</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lab">Registered voters</div>
+      <div class="stat-val">${fmt(s.users)}</div>
+      <div class="stat-sub">Accounts created</div>
+    </div>
+    <div class="stat">
+      <div class="stat-lab">Pending payments</div>
+      <div class="stat-val">${fmt(s.pendingCount)}</div>
+      <div class="stat-sub">Awaiting PIN entry</div>
+    </div>
+  `;
+}
+
+// ============ RENDER: LEADERBOARD ============
+function renderLeaderboard() {
+  if (!cache.leaderboard) return;
+  const q = $('#lbSearch').value.trim().toLowerCase();
+  const body = $('#lbBody');
+  let rows = '';
+  cache.leaderboard.categories.forEach(cat => {
+    const filtered = q ? cat.nominees.filter(n => n.name.toLowerCase().includes(q) || (n.detail||'').toLowerCase().includes(q)) : cat.nominees;
+    if (!filtered.length) return;
+    rows += `<tr class="cat-row"><td colspan="7">${cat.title}</td></tr>`;
+    filtered.forEach((n, i) => {
+      const rank = i + 1;
+      const leadingCls = rank === 1 ? 'leading-cell' : '';
+      rows += `
+        <tr>
+          <td class="${leadingCls}">#${rank}</td>
+          <td class="${leadingCls}">${n.name}</td>
+          <td style="color:var(--muted);font-size:12px;">${n.detail || '—'}</td>
+          <td class="num-cell">${fmt(n.paid_votes)}</td>
+          <td class="num-cell" style="color:var(--gold-bright);">${fmt(n.base_votes)}</td>
+          <td class="num-cell ${leadingCls}"><strong>${fmt(n.votes)}</strong></td>
+          <td style="text-align:right;">
+            <button class="icon-btn gold" data-adjust="${n.id}" data-name="${n.name}" data-base="${n.base_votes}">Adjust</button>
+            <button class="icon-btn red" data-del="${n.id}" data-name="${n.name}">✕</button>
+          </td>
+        </tr>`;
+    });
+  });
+  body.innerHTML = rows;
+
+  body.querySelectorAll('[data-adjust]').forEach(b => b.addEventListener('click', () => openAdjust(b.dataset.adjust, b.dataset.name, b.dataset.base)));
+  body.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => delNominee(b.dataset.del, b.dataset.name)));
+}
+$('#lbSearch').addEventListener('input', renderLeaderboard);
+
+// ============ RENDER: TRANSACTIONS ============
+function renderTransactions() {
+  const q = $('#txSearch').value.trim().toLowerCase();
+  const fs = $('#txFilter').value;
+  const rows = cache.transactions.filter(t => {
+    if (fs !== 'all' && t.status !== fs) return false;
+    if (!q) return true;
+    return (t.phone||'').includes(q) || (t.nominee_name||'').toLowerCase().includes(q) || (t.mpesa_receipt||'').toLowerCase().includes(q);
+  });
+  if (!rows.length) { $('#txBody').innerHTML = `<tr><td colspan="7"><div class="empty">No transactions match your filter.</div></td></tr>`; return; }
+  $('#txBody').innerHTML = rows.map(t => `
+    <tr>
+      <td style="font-size:12px;color:var(--muted);">${fmtDate(t.created_at)}</td>
+      <td>${t.nominee_name || '—'}</td>
+      <td class="mono">${maskPhone(t.phone)}</td>
+      <td class="num-cell">KES ${fmt(t.amount)}</td>
+      <td class="num-cell">${fmt(t.votes)}</td>
+      <td class="mono" style="font-size:11.5px;color:var(--muted);">${t.mpesa_receipt || '—'}</td>
+      <td>${statusBadge(t.status)}</td>
+    </tr>`).join('');
+}
+$('#txSearch').addEventListener('input', renderTransactions);
+$('#txFilter').addEventListener('change', renderTransactions);
+
+// ============ RENDER: RECENT FEED ============
+function renderFeed() {
+  const rows = (cache.transactions || []).slice(0, 30);
+  if (!rows.length) { $('#feedBody').innerHTML = `<tr><td colspan="7"><div class="empty">No activity yet.</div></td></tr>`; return; }
+  $('#feedBody').innerHTML = rows.map(t => `
+    <tr>
+      <td style="font-size:12px;color:var(--muted);">${fmtDate(t.created_at)}</td>
+      <td>${t.nominee_name || '—'}</td>
+      <td class="mono">${maskPhone(t.phone)}</td>
+      <td class="num-cell">KES ${fmt(t.amount)}</td>
+      <td class="num-cell">${fmt(t.votes)}</td>
+      <td class="mono" style="font-size:11.5px;color:var(--muted);">${t.mpesa_receipt || '—'}</td>
+      <td>${statusBadge(t.status)}</td>
+    </tr>`).join('');
+}
+
+// ============ RENDER: USERS ============
+function renderUsers() {
+  const q = $('#usrSearch').value.trim().toLowerCase();
+  const rows = (cache.users || []).filter(u => !q || u.name.toLowerCase().includes(q) || u.phone.includes(q));
+  if (!rows.length) { $('#usrBody').innerHTML = `<tr><td colspan="6"><div class="empty">No voters yet.</div></td></tr>`; return; }
+  $('#usrBody').innerHTML = rows.map(u => `
+    <tr>
+      <td>${u.name}</td>
+      <td class="mono">${maskPhone(u.phone)}</td>
+      <td style="font-size:12px;color:var(--muted);">${fmtDate(u.created_at)}</td>
+      <td class="num-cell">${fmt(u.success_tx)}</td>
+      <td class="num-cell">KES ${fmt(u.spent)}</td>
+      <td class="num-cell">${fmt(u.votes)}</td>
+    </tr>`).join('');
+}
+$('#usrSearch').addEventListener('input', renderUsers);
+
+// ============ RENDER: SETTINGS ============
+function renderSettings() {
+  const s = cache.stats; if (!s) return;
+  $('#setPrice').textContent = 'KES ' + fmt(s.votePrice);
+  $('#setCd').textContent = s.countdownEnd ? new Date(s.countdownEnd).toLocaleString('en-KE') : '—';
+  $('#setApi').textContent = API;
+}
+
+// ============ COUNTDOWN ============
+function updateCountdown() {
+  if (!cache.stats?.countdownEnd) return;
+  const ms = cache.stats.countdownEnd - Date.now();
+  if (ms <= 0) { $('#cdTimer').textContent = 'Voting has ended'; return; }
+  const d = Math.floor(ms/86400000), h = Math.floor(ms/3600000)%24, m = Math.floor(ms/60000)%60;
+  $('#cdTimer').textContent = `${d}d ${h}h ${m}m`;
+}
+setInterval(updateCountdown, 60000);
+
+$('#cdSet').addEventListener('click', async () => {
+  const days = parseInt($('#cdDays').value, 10);
+  if (!days || days < 1) return toast('Enter a valid number of days', 'err');
+  try {
+    await api('/api/admin/countdown', { method:'POST', body:{ days } });
+    toast(`Countdown reset to ${days} days`);
+    await refreshAll();
+    $('#cdDays').value = '';
+  } catch { toast('Failed to update countdown', 'err'); }
+});
+
+// ============ ADJUST VOTES MODAL ============
+let adjustTarget = null;
+function openAdjust(id, name, base) {
+  adjustTarget = id;
+  $('#adjustFor').textContent = `Adjusting ${name} · currently ${base} bonus votes`;
+  $('#adjustDelta').value = ''; $('#adjustSet').value = '';
+  $('#adjustMdl').classList.add('on');
+}
+$('#adjustCancel').addEventListener('click', () => $('#adjustMdl').classList.remove('on'));
+$('#adjustSave').addEventListener('click', async () => {
+  const delta = parseInt($('#adjustDelta').value, 10);
+  const setTo = parseInt($('#adjustSet').value, 10);
+  const body = { nomineeId: adjustTarget };
+  if (Number.isFinite(setTo)) body.setTo = setTo;
+  else if (Number.isFinite(delta)) body.delta = delta;
+  else return toast('Enter a delta or a set value', 'err');
+  try {
+    await api('/api/admin/adjust-votes', { method:'POST', body });
+    $('#adjustMdl').classList.remove('on');
+    toast('Votes updated');
+    await refreshAll();
+  } catch { toast('Update failed', 'err'); }
+});
+
+async function delNominee(id, name) {
+  if (!confirm(`Remove "${name}"? This cannot be undone.`)) return;
+  try { await api('/api/admin/nominee/' + id, { method:'DELETE' }); toast('Nominee removed'); await refreshAll(); }
+  catch { toast('Delete failed', 'err'); }
+}
+
+// ============ ADD NOMINEE MODAL ============
+$('#addNominee').addEventListener('click', () => {
+  if (!cache.leaderboard) return;
+  $('#addCat').innerHTML = cache.leaderboard.categories.map(c => `<option value="${c.id}">${c.title}</option>`).join('');
+  $('#addName').value = ''; $('#addDetail').value = '';
+  $('#addMdl').classList.add('on');
+});
+$('#addCancel').addEventListener('click', () => $('#addMdl').classList.remove('on'));
+$('#addSave').addEventListener('click', async () => {
+  const categoryId = $('#addCat').value;
+  const name = $('#addName').value.trim();
+  const detail = $('#addDetail').value.trim();
+  if (!name) return toast('Enter a nominee name', 'err');
+  try {
+    await api('/api/admin/nominee', { method:'POST', body:{ categoryId, name, detail } });
+    $('#addMdl').classList.remove('on');
+    toast('Nominee added');
+    await refreshAll();
+  } catch { toast('Failed to add', 'err'); }
+});
+
+// ============ EXPORT CSV ============
+$('#exportCsv').addEventListener('click', () => {
+  const rows = cache.transactions || [];
+  const csv = ['When,Nominee,Phone,Amount,Votes,Receipt,Status',
+    ...rows.map(t => [fmtDate(t.created_at), t.nominee_name||'', t.phone, t.amount, t.votes, t.mpesa_receipt||'', t.status].map(v => `"${String(v).replace(/"/g,'""')}"`).join(','))
+  ].join('\n');
+  const blob = new Blob([csv], { type:'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `mella-transactions-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+});
+
+// ============ EVENT WIRES ============
+$('#signInBtn').addEventListener('click', doLogin);
+$('#pwd').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+$('#logoutBtn').addEventListener('click', logout);
+$('#refreshBtn').addEventListener('click', () => { $('#refreshBtn').textContent = '↻ Refreshing…'; refreshAll().then(() => $('#refreshBtn').textContent = '↻ Refresh'); });
+
+// ============ INIT ============
+(async () => {
+  const ok = await verifyToken();
+  if (ok) enterApp();
+})();
+</script>
+</body>
+</html>
