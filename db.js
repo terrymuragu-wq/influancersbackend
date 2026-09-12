@@ -128,6 +128,7 @@ const SEED_VERSION = 'v1-2026-creatives-award';
 
 const seedCategories = [
   { id: 'influencers-of-the-year', title: 'Influencers of the Year', nominees: [
+    
     ['Saint_millan', ''],
     ['who.ismishy', ''],
     ['I.t.s.f.a.b.i.a.n_', ''],
@@ -138,7 +139,7 @@ const seedCategories = [
     ['O.yugi._', ''],
     ['___j__zilster___', ''],
     ['I_am_kamasho', ''],
-    ['I.t.s.f.a.b.i.a.n_.', ''],
+    
   ]},
 ];
 
