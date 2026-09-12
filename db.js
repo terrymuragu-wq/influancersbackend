@@ -128,17 +128,16 @@ const SEED_VERSION = 'v1-2026-creatives-award';
 
 const seedCategories = [
   { id: 'influencers-of-the-year', title: 'Influencers of the Year', nominees: [
-    ['Lavoofoxy.', ''],
     ['Saint_millan', ''],
     ['who.ismishy', ''],
     ['I.t.s.f.a.b.i.a.n_', ''],
     ['Mr_mombasa', ''],
+    ['Lavoofoxy', ''],
     ['anyango__', ''],
     ['darius.mboya', ''],
     ['O.yugi._', ''],
-    ['j__zilster', ''],
+    ['___j__zilster___', ''],
     ['I_am_kamasho', ''],
-    ['Lavoofoxy', ''],
   ]},
 ];
 
@@ -198,6 +197,173 @@ if (catCount === 0) {
   console.log('[db] Re-seeded categories/nominees to ' + SEED_VERSION);
 }
 
+// ============================================================
+//  Catalogue healer — guarantees the Influencers of the Year
+//  category ALWAYS contains exactly the 10 official nominees,
+//  with stable deterministic ids, exact spelling, and every
+//  historical vote / transaction / floor carried over.
+//  Runs on every boot and after every Neon restore/reconcile,
+//  so stale backups can never resurrect old/duplicate rows
+//  (this was the root cause of names disappearing/reappearing).
+// ============================================================
+const CANONICAL_CATEGORY_ID = 'influencers-of-the-year';
+const CANONICAL_ROSTER = [
+  { name: 'Saint_millan',       aliases: [] },
+  { name: 'who.ismishy',        aliases: [] },
+  { name: 'I.t.s.f.a.b.i.a.n_', aliases: [] },
+  { name: 'Mr_mombasa',         aliases: [] },
+  { name: 'Lavoofoxy',          aliases: ['Lavoofoxy.'] },
+  { name: 'anyango__',          aliases: [] },
+  { name: 'darius.mboya',       aliases: [] },
+  { name: 'O.yugi._',           aliases: [] },
+  { name: '___j__zilster___',   aliases: ['j__zilster', '_j__zilster_', '__j__zilster__'] },
+  { name: 'I_am_kamasho',       aliases: [] },
+];
+
+function canonicaliseCatalogue() {
+  try {
+    const cat = db.prepare('SELECT id FROM categories WHERE id = ?').get(CANONICAL_CATEGORY_ID);
+    if (!cat) return false;
+    let changed = false;
+    const upsertFloor = db.prepare(`
+      INSERT INTO vote_baseline (nominee_id, base, updated_at) VALUES (?, ?, ?)
+      ON CONFLICT(nominee_id) DO UPDATE SET
+        base = MAX(vote_baseline.base, excluded.base),
+        updated_at = excluded.updated_at
+    `);
+    const tx = db.transaction(() => {
+      CANONICAL_ROSTER.forEach((entry, idx) => {
+        const canonId = deterministicNomineeId(CANONICAL_CATEGORY_ID, entry.name);
+        const names = [entry.name, ...entry.aliases];
+        const rows = db.prepare(
+          `SELECT * FROM nominees WHERE category_id = ? AND name IN (${names.map(() => '?').join(',')})`
+        ).all(CANONICAL_CATEGORY_ID, ...names);
+
+        let base = 0, paid = 0, detail = '';
+        rows.forEach(r => {
+          base = Math.max(base, r.base_votes || 0);
+          paid = Math.max(paid, r.paid_votes || 0);
+          if (!detail && r.detail) detail = r.detail;
+        });
+
+        const canonRow = rows.find(r => r.id === canonId);
+        if (!canonRow) {
+          db.prepare('INSERT INTO nominees (id, category_id, name, detail, base_votes, paid_votes, ordinal) VALUES (?, ?, ?, ?, ?, ?, ?)')
+            .run(canonId, CANONICAL_CATEGORY_ID, entry.name, detail, base, paid, idx + 1);
+          changed = true;
+        } else if (canonRow.name !== entry.name || (canonRow.base_votes || 0) !== base || (canonRow.paid_votes || 0) !== paid || canonRow.ordinal !== idx + 1) {
+          db.prepare("UPDATE nominees SET name = ?, detail = COALESCE(NULLIF(detail, ''), ?), base_votes = ?, paid_votes = ?, ordinal = ? WHERE id = ?")
+            .run(entry.name, detail, base, paid, idx + 1, canonId);
+          changed = true;
+        }
+
+        // Fold every legacy/alias row into the canonical one: re-point its
+        // transactions, carry over its vote floor, then remove the row.
+        rows.forEach(r => {
+          if (r.id === canonId) return;
+          db.prepare('UPDATE transactions SET nominee_id = ? WHERE nominee_id = ?').run(canonId, r.id);
+          db.prepare('DELETE FROM device_votes WHERE nominee_id = ?').run(r.id);
+          const lb = db.prepare('SELECT base FROM vote_baseline WHERE nominee_id = ?').get(r.id);
+          if (lb) upsertFloor.run(canonId, lb.base, Date.now());
+          db.prepare('DELETE FROM vote_baseline WHERE nominee_id = ?').run(r.id);
+          db.prepare('DELETE FROM nominees WHERE id = ?').run(r.id);
+          changed = true;
+        });
+      });
+
+      // Remove any row in this category that is NOT one of the official 10
+      // (stale rows re-inserted by old Neon backups). Rows that still have
+      // payment transactions attached are kept so history is never lost.
+      const canonIds = CANONICAL_ROSTER.map(e => deterministicNomineeId(CANONICAL_CATEGORY_ID, e.name));
+      const placeholders = canonIds.map(() => '?').join(',');
+      const strays = db.prepare(`SELECT id FROM nominees WHERE category_id = ? AND id NOT IN (${placeholders})`).all(CANONICAL_CATEGORY_ID, ...canonIds);
+      strays.forEach(r => {
+        const txCount = db.prepare('SELECT COUNT(*) AS n FROM transactions WHERE nominee_id = ?').get(r.id).n;
+        if (txCount === 0) {
+          db.prepare('DELETE FROM device_votes WHERE nominee_id = ?').run(r.id);
+          db.prepare('DELETE FROM vote_baseline WHERE nominee_id = ?').run(r.id);
+          db.prepare('DELETE FROM nominees WHERE id = ?').run(r.id);
+          changed = true;
+        }
+      });
+
+      // Drop orphaned floors pointing at nominees that no longer exist.
+      db.prepare('DELETE FROM vote_baseline WHERE nominee_id NOT IN (SELECT id FROM nominees)').run();
+    });
+    tx();
+    if (changed) console.log('[db] Catalogue canonicalised — exact 10-nominee roster enforced.');
+    return changed;
+  } catch (e) {
+    console.error('[db] canonicaliseCatalogue error:', e.message);
+    return false;
+  }
+}
+
+// ---- Snapshot auto-restore (snapshot.json shipped with the code) ----
+// Applies the organiser-provided data snapshot exactly once (keyed by content
+// hash) using monotonic merge rules: votes/floors only rise, transactions are
+// only added when missing, and the countdown only moves forward.
+function applySnapshotFile() {
+  try {
+    const snapPath = path.join(__dirname, 'snapshot.json');
+    if (!fs.existsSync(snapPath)) return;
+    const data = JSON.parse(fs.readFileSync(snapPath, 'utf8'));
+    if (!data || !Array.isArray(data.nominees)) return;
+    const hash = crypto.createHash('sha1').update(JSON.stringify(data)).digest('hex').slice(0, 16);
+    const key = 'snapshot_applied_' + hash;
+    if (db.prepare('SELECT value FROM settings WHERE key = ?').get(key)) return;
+    const now = Date.now();
+    const tx = db.transaction(() => {
+      const insCat = db.prepare('INSERT OR IGNORE INTO categories (id, title, ordinal) VALUES (?, ?, ?)');
+      (data.categories || []).forEach(c => insCat.run(c.id, c.title, c.ordinal || 0));
+
+      const getNom = db.prepare('SELECT base_votes, paid_votes FROM nominees WHERE id = ?');
+      const insNom = db.prepare('INSERT OR IGNORE INTO nominees (id, category_id, name, detail, base_votes, paid_votes, ordinal) VALUES (?, ?, ?, ?, ?, ?, ?)');
+      const updNom = db.prepare('UPDATE nominees SET base_votes = ?, paid_votes = ? WHERE id = ?');
+      (data.nominees || []).forEach(n => {
+        const local = getNom.get(n.id);
+        if (!local) { insNom.run(n.id, n.category_id, n.name, n.detail || '', n.base_votes || 0, n.paid_votes || 0, n.ordinal || 0); return; }
+        const nb = Math.max(local.base_votes || 0, n.base_votes || 0);
+        const np = Math.max(local.paid_votes || 0, n.paid_votes || 0);
+        if (nb !== local.base_votes || np !== local.paid_votes) updNom.run(nb, np, n.id);
+      });
+
+      const insU = db.prepare('INSERT OR IGNORE INTO users (id, name, phone, password_hash, created_at) VALUES (?, ?, ?, ?, ?)');
+      (data.users || []).forEach(u => insU.run(u.id, u.name, u.phone, u.password_hash, u.created_at));
+
+      const insT = db.prepare('INSERT OR IGNORE INTO transactions (id, checkout_id, user_id, device_id, nominee_id, phone, amount, votes, status, mpesa_receipt, created_at, completed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+      (data.transactions || []).forEach(t => insT.run(t.id, t.checkout_id, t.user_id, t.device_id, t.nominee_id, t.phone, t.amount, t.votes, t.status, t.mpesa_receipt, t.created_at, t.completed_at));
+
+      const insD = db.prepare('INSERT OR IGNORE INTO device_votes (device_id, category_id, nominee_id, created_at) VALUES (?, ?, ?, ?)');
+      (data.device_votes || []).forEach(d => insD.run(d.device_id, d.category_id, d.nominee_id, d.created_at));
+
+      const upBase = db.prepare(`INSERT INTO vote_baseline (nominee_id, base, updated_at) VALUES (?, ?, ?)
+        ON CONFLICT(nominee_id) DO UPDATE SET base = MAX(vote_baseline.base, excluded.base), updated_at = excluded.updated_at`);
+      (data.vote_baseline || []).forEach(v => upBase.run(v.nominee_id, v.base || 0, now));
+
+      (data.settings || []).forEach(s => {
+        if (!s || !s.key) return;
+        if (s.key === 'countdown_end') {
+          const cur = db.prepare('SELECT value FROM settings WHERE key = ?').get('countdown_end');
+          const incoming = parseInt(s.value, 10) || 0;
+          if (incoming > (cur ? (parseInt(cur.value, 10) || 0) : 0)) {
+            db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(s.key, String(incoming));
+          }
+        }
+      });
+
+      db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(key, String(now));
+    });
+    tx();
+    console.log('[db] snapshot.json applied (monotonic merge).');
+  } catch (e) {
+    console.error('[db] snapshot apply failed:', e.message);
+  }
+}
+
+applySnapshotFile();
+canonicaliseCatalogue();
+
 // Countdown init
 const cdRow = db.prepare('SELECT value FROM settings WHERE key = ?').get('countdown_end');
 if (!cdRow) {
@@ -218,3 +384,5 @@ if (process.env.DATABASE_URL) {
 }
 
 module.exports = db;
+module.exports.canonicaliseCatalogue = canonicaliseCatalogue;
+module.exports.applySnapshotFile = applySnapshotFile;

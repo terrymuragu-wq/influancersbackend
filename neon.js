@@ -214,6 +214,9 @@ async function init(db, opts = {}) {
       } else {
         console.log('[neon] No usable backup found — keeping fresh seed.');
       }
+      // Heal the catalogue after any restore so a stale backup can never
+      // resurrect old/duplicate/misspelled nominee rows.
+      if (typeof db.canonicaliseCatalogue === 'function') db.canonicaliseCatalogue();
     }
 
     // Always push the current store up right after boot.
@@ -232,7 +235,12 @@ async function init(db, opts = {}) {
     // what guarantees data is restored to the admin after every deploy).
     restoreTimer = setInterval(() => {
       readBackup()
-        .then(backup => { if (backup && reconcile(db, backup)) console.log('[neon] Reconciled newer data from Neon backup into local store.'); })
+        .then(backup => {
+          if (backup && reconcile(db, backup)) {
+            if (typeof db.canonicaliseCatalogue === 'function') db.canonicaliseCatalogue();
+            console.log('[neon] Reconciled newer data from Neon backup into local store.');
+          }
+        })
         .catch(e => console.error('[neon] periodic restore failed:', e.message));
     }, RESTORE_INTERVAL_MS);
     if (restoreTimer.unref) restoreTimer.unref();

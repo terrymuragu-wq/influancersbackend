@@ -1,0 +1,340 @@
+{
+  "ts": 1789187364184,
+  "note": "Creatives Award 2026 \u2014 data snapshot captured from the live admin panel and healed to the canonical 10-nominee roster.",
+  "categories": [
+    {
+      "id": "influencers-of-the-year",
+      "title": "Influencers of the Year",
+      "ordinal": 1
+    }
+  ],
+  "nominees": [
+    {
+      "id": "7da69724-74ed-e7c5-7d1d-fb01653aead2",
+      "category_id": "influencers-of-the-year",
+      "name": "Saint_millan",
+      "detail": "",
+      "base_votes": 0,
+      "paid_votes": 0,
+      "ordinal": 1
+    },
+    {
+      "id": "b8cbdfa3-03f0-3ea5-943e-bf028785ebc2",
+      "category_id": "influencers-of-the-year",
+      "name": "who.ismishy",
+      "detail": "",
+      "base_votes": 0,
+      "paid_votes": 0,
+      "ordinal": 2
+    },
+    {
+      "id": "fd4ce533-7b39-8f5b-f438-0ee949827b25",
+      "category_id": "influencers-of-the-year",
+      "name": "I.t.s.f.a.b.i.a.n_",
+      "detail": "",
+      "base_votes": 0,
+      "paid_votes": 8,
+      "ordinal": 3
+    },
+    {
+      "id": "59b8af80-7c8d-3005-e8f9-85491ced6922",
+      "category_id": "influencers-of-the-year",
+      "name": "Mr_mombasa",
+      "detail": "",
+      "base_votes": 0,
+      "paid_votes": 0,
+      "ordinal": 4
+    },
+    {
+      "id": "23664d49-36c5-b7e8-9821-39e10fa0f50a",
+      "category_id": "influencers-of-the-year",
+      "name": "Lavoofoxy",
+      "detail": "",
+      "base_votes": 22,
+      "paid_votes": 0,
+      "ordinal": 5
+    },
+    {
+      "id": "cef40b8d-0d6d-7f09-74b1-e7e7a61aa0f9",
+      "category_id": "influencers-of-the-year",
+      "name": "anyango__",
+      "detail": "",
+      "base_votes": 0,
+      "paid_votes": 7,
+      "ordinal": 6
+    },
+    {
+      "id": "101e7e27-eed9-ad4e-c263-858c03e75ecb",
+      "category_id": "influencers-of-the-year",
+      "name": "darius.mboya",
+      "detail": "",
+      "base_votes": 0,
+      "paid_votes": 0,
+      "ordinal": 7
+    },
+    {
+      "id": "8a4ed5af-306a-ac28-6f1f-939b8ff59f31",
+      "category_id": "influencers-of-the-year",
+      "name": "O.yugi._",
+      "detail": "",
+      "base_votes": 0,
+      "paid_votes": 0,
+      "ordinal": 8
+    },
+    {
+      "id": "52d5cd18-2932-d38a-b183-6d1e52adb1d6",
+      "category_id": "influencers-of-the-year",
+      "name": "___j__zilster___",
+      "detail": "",
+      "base_votes": 0,
+      "paid_votes": 0,
+      "ordinal": 9
+    },
+    {
+      "id": "f75d82bf-bcc4-40cb-77e7-ca03c30983b0",
+      "category_id": "influencers-of-the-year",
+      "name": "I_am_kamasho",
+      "detail": "",
+      "base_votes": 0,
+      "paid_votes": 3,
+      "ordinal": 10
+    }
+  ],
+  "users": [],
+  "transactions": [
+    {
+      "id": "bea6af07-f142-4dc7-826e-59695ceeb720",
+      "checkout_id": "ws_CO_12092026065255070718327281",
+      "user_id": null,
+      "device_id": "dev_mtxumu8e_li3orjxf0du4ntzh",
+      "nominee_id": "f75d82bf-bcc4-40cb-77e7-ca03c30983b0",
+      "phone": "254718327281",
+      "amount": 20,
+      "votes": 1,
+      "status": "success",
+      "mpesa_receipt": "UICJ06MX7E",
+      "created_at": 1789185175618,
+      "completed_at": 1789185191249
+    },
+    {
+      "id": "789d0cc7-2fcd-460b-b6ec-5a8d7dcac4dd",
+      "checkout_id": "ws_CO_12092026053802254757838729",
+      "user_id": null,
+      "device_id": "dev_mtxrxili_fjkhp7u9mmjo3ei2",
+      "nominee_id": "f75d82bf-bcc4-40cb-77e7-ca03c30983b0",
+      "phone": "254757838729",
+      "amount": 20,
+      "votes": 1,
+      "status": "success",
+      "mpesa_receipt": "UICDI65KAJ",
+      "created_at": 1789180682945,
+      "completed_at": 1789180698919
+    },
+    {
+      "id": "af336ecb-f9ed-4176-9dff-9353dad64f01",
+      "checkout_id": "ws_CO_12092026035422554741053067",
+      "user_id": null,
+      "device_id": "dev_mtxo80ml_r7j8h2b8mxxqopen",
+      "nominee_id": "f75d82bf-bcc4-40cb-77e7-ca03c30983b0",
+      "phone": "254741053067",
+      "amount": 20,
+      "votes": 1,
+      "status": "success",
+      "mpesa_receipt": "UICAP6F3JV",
+      "created_at": 1789174462801,
+      "completed_at": 1789174483641
+    },
+    {
+      "id": "916b6558-976b-4978-8670-fdfcb71053a6",
+      "checkout_id": "ws_CO_12092026002532739794378568",
+      "user_id": null,
+      "device_id": "dev_mtxgrvva_jf9q5kas2we25uzx",
+      "nominee_id": "cef40b8d-0d6d-7f09-74b1-e7e7a61aa0f9",
+      "phone": "254794378568",
+      "amount": 20,
+      "votes": 1,
+      "status": "success",
+      "mpesa_receipt": "UICAV6AONV",
+      "created_at": 1789161932835,
+      "completed_at": 1789161950555
+    },
+    {
+      "id": "044aa6fe-e5f6-492d-b1d9-0a1f58d7ec2a",
+      "checkout_id": "ws_CO_12092026000004805715792275",
+      "user_id": null,
+      "device_id": "dev_mtxfv5o6_i36mqsiez9av02d3",
+      "nominee_id": "fd4ce533-7b39-8f5b-f438-0ee949827b25",
+      "phone": "254715792275",
+      "amount": 100,
+      "votes": 5,
+      "status": "success",
+      "mpesa_receipt": "UIC9D6FZ15",
+      "created_at": 1789160404626,
+      "completed_at": 1789160414061
+    },
+    {
+      "id": "31d0f9d9-a3e5-4e29-8a2e-ea4302ec33c9",
+      "checkout_id": "ws_CO_11092026235730246712867769",
+      "user_id": null,
+      "device_id": "dev_mtxdfpdg_5dpskigibxsahk9w",
+      "nominee_id": "fd4ce533-7b39-8f5b-f438-0ee949827b25",
+      "phone": "254712867769",
+      "amount": 20,
+      "votes": 1,
+      "status": "success",
+      "mpesa_receipt": "UIB0W5PVMO",
+      "created_at": 1789160250843,
+      "completed_at": 1789160269554
+    },
+    {
+      "id": "380e247a-50d3-4764-a4cc-87c17b679f15",
+      "checkout_id": "ws_CO_11092026235633494768170337",
+      "user_id": null,
+      "device_id": "dev_mtxfrhyg_8o4vf0asjrlddzvm",
+      "nominee_id": "fd4ce533-7b39-8f5b-f438-0ee949827b25",
+      "phone": "254768170337",
+      "amount": 20,
+      "votes": 1,
+      "status": "success",
+      "mpesa_receipt": "UIBRA6BFJZ",
+      "created_at": 1789160193436,
+      "completed_at": 1789160202967
+    },
+    {
+      "id": "0c2c14eb-5fa9-4fc5-8e95-04f38c736393",
+      "checkout_id": "ws_CO_11092026232633792758751389",
+      "user_id": null,
+      "device_id": "dev_mtxeouwi_uyn0vbx6qq3k8kfm",
+      "nominee_id": "fd4ce533-7b39-8f5b-f438-0ee949827b25",
+      "phone": "254758751389",
+      "amount": 20,
+      "votes": 1,
+      "status": "success",
+      "mpesa_receipt": "UIBIW6O9YH",
+      "created_at": 1789158393927,
+      "completed_at": 1789158404305
+    },
+    {
+      "id": "3edd5391-f6ac-48b9-92dc-4f8e22602f96",
+      "checkout_id": "ws_CO_11092026225643102718416945",
+      "user_id": null,
+      "device_id": "dev_mtxdmlr5_ccea4fcwxqnibloh",
+      "nominee_id": "cef40b8d-0d6d-7f09-74b1-e7e7a61aa0f9",
+      "phone": "254718416945",
+      "amount": 20,
+      "votes": 1,
+      "status": "success",
+      "mpesa_receipt": "UIBGN6GWJH",
+      "created_at": 1789156604154,
+      "completed_at": 1789156617926
+    },
+    {
+      "id": "fe253dfa-b01d-40b0-a3ce-b47e256e670d",
+      "checkout_id": "ws_CO_11092026225232744712867769",
+      "user_id": null,
+      "device_id": "dev_mtxdfpdg_5dpskigibxsahk9w",
+      "nominee_id": "fd4ce533-7b39-8f5b-f438-0ee949827b25",
+      "phone": "254712867769",
+      "amount": 20,
+      "votes": 1,
+      "status": "failed",
+      "mpesa_receipt": null,
+      "created_at": 1789156353182,
+      "completed_at": 1789156362417
+    },
+    {
+      "id": "6077be7c-db2c-41f2-968f-045903fa3b44",
+      "checkout_id": "ws_CO_11092026225131114712867769",
+      "user_id": null,
+      "device_id": "dev_mtxdfpdg_5dpskigibxsahk9w",
+      "nominee_id": "cef40b8d-0d6d-7f09-74b1-e7e7a61aa0f9",
+      "phone": "254712867769",
+      "amount": 20,
+      "votes": 1,
+      "status": "success",
+      "mpesa_receipt": "UIB0W5PTPD",
+      "created_at": 1789156291765,
+      "completed_at": 1789156304566
+    },
+    {
+      "id": "cb103d76-d7a6-4268-862b-35710c839de8",
+      "checkout_id": "ws_CO_11092026224247721743284198",
+      "user_id": null,
+      "device_id": "dev_mtxd3c3j_pied4mihvpkynr2r",
+      "nominee_id": "cef40b8d-0d6d-7f09-74b1-e7e7a61aa0f9",
+      "phone": "254743284198",
+      "amount": 20,
+      "votes": 1,
+      "status": "success",
+      "mpesa_receipt": "UIB2Q63VPS",
+      "created_at": 1789155768147,
+      "completed_at": 1789155783632
+    },
+    {
+      "id": "09c872c3-5ba4-45a9-8d6d-6613f4f913a3",
+      "checkout_id": "ws_CO_11092026223348565742416618",
+      "user_id": null,
+      "device_id": "dev_mtxcsxea_zgqfliwopcsq3rb2",
+      "nominee_id": "cef40b8d-0d6d-7f09-74b1-e7e7a61aa0f9",
+      "phone": "254742416618",
+      "amount": 20,
+      "votes": 1,
+      "status": "success",
+      "mpesa_receipt": "UIB956A0KD",
+      "created_at": 1789155228789,
+      "completed_at": 1789155243252
+    },
+    {
+      "id": "a7e250a0-9079-4603-9601-fac124880c3d",
+      "checkout_id": "ws_CO_11092026223024707791391570",
+      "user_id": null,
+      "device_id": "dev_mtxcnzwe_ylm56j0fszn1475a",
+      "nominee_id": "cef40b8d-0d6d-7f09-74b1-e7e7a61aa0f9",
+      "phone": "254791391570",
+      "amount": 40,
+      "votes": 2,
+      "status": "success",
+      "mpesa_receipt": "UIBAY5XSKL",
+      "created_at": 1789155024915,
+      "completed_at": 1789155035584
+    }
+  ],
+  "device_votes": [],
+  "settings": [
+    {
+      "key": "countdown_end",
+      "value": "1791558192258"
+    },
+    {
+      "key": "seed_version",
+      "value": "v1-2026-creatives-award"
+    }
+  ],
+  "vote_baseline": [
+    {
+      "nominee_id": "b8cbdfa3-03f0-3ea5-943e-bf028785ebc2",
+      "base": 1,
+      "updated_at": 1789187364184
+    },
+    {
+      "nominee_id": "fd4ce533-7b39-8f5b-f438-0ee949827b25",
+      "base": 25,
+      "updated_at": 1789187364184
+    },
+    {
+      "nominee_id": "23664d49-36c5-b7e8-9821-39e10fa0f50a",
+      "base": 22,
+      "updated_at": 1789187364184
+    },
+    {
+      "nominee_id": "cef40b8d-0d6d-7f09-74b1-e7e7a61aa0f9",
+      "base": 12,
+      "updated_at": 1789187364184
+    },
+    {
+      "nominee_id": "f75d82bf-bcc4-40cb-77e7-ca03c30983b0",
+      "base": 4,
+      "updated_at": 1789187364184
+    }
+  ]
+}
