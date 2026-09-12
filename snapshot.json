@@ -1,5 +1,5 @@
 {
-  "ts": 1789187364184,
+  "ts": 1789191203395,
   "note": "Creatives Award 2026 \u2014 data snapshot captured from the live admin panel and healed to the canonical 10-nominee roster.",
   "categories": [
     {
@@ -60,7 +60,7 @@
       "name": "anyango__",
       "detail": "",
       "base_votes": 0,
-      "paid_votes": 7,
+      "paid_votes": 8,
       "ordinal": 6
     },
     {
@@ -102,6 +102,20 @@
   ],
   "users": [],
   "transactions": [
+    {
+      "id": "938fdda0-e9c9-47d6-a9ff-96b5870a2d30",
+      "checkout_id": "ws_CO_12092026082916504720942105",
+      "user_id": null,
+      "device_id": "dev_mtxy3812_mt3txh2wh7yqswra",
+      "nominee_id": "cef40b8d-0d6d-7f09-74b1-e7e7a61aa0f9",
+      "phone": "254720942105",
+      "amount": 20,
+      "votes": 1,
+      "status": "success",
+      "mpesa_receipt": "UICCB63324",
+      "created_at": 1789190956463,
+      "completed_at": 1789190964695
+    },
     {
       "id": "bea6af07-f142-4dc7-826e-59695ceeb720",
       "checkout_id": "ws_CO_12092026065255070718327281",
@@ -314,27 +328,27 @@
     {
       "nominee_id": "b8cbdfa3-03f0-3ea5-943e-bf028785ebc2",
       "base": 1,
-      "updated_at": 1789187364184
+      "updated_at": 1789191203395
     },
     {
       "nominee_id": "fd4ce533-7b39-8f5b-f438-0ee949827b25",
       "base": 25,
-      "updated_at": 1789187364184
+      "updated_at": 1789191203395
     },
     {
       "nominee_id": "23664d49-36c5-b7e8-9821-39e10fa0f50a",
-      "base": 22,
-      "updated_at": 1789187364184
+      "base": 25,
+      "updated_at": 1789191203395
     },
     {
       "nominee_id": "cef40b8d-0d6d-7f09-74b1-e7e7a61aa0f9",
-      "base": 12,
-      "updated_at": 1789187364184
+      "base": 13,
+      "updated_at": 1789191203395
     },
     {
       "nominee_id": "f75d82bf-bcc4-40cb-77e7-ca03c30983b0",
-      "base": 4,
-      "updated_at": 1789187364184
+      "base": 9,
+      "updated_at": 1789191203395
     }
   ]
 }
