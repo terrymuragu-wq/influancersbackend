@@ -138,6 +138,7 @@ const seedCategories = [
     ['O.yugi._', ''],
     ['___j__zilster___', ''],
     ['I_am_kamasho', ''],
+    ['I.t.s.f.a.b.i.a.n_.', ''],
   ]},
 ];
 
